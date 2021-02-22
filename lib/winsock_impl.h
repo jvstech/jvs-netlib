@@ -12,12 +12,10 @@
 
 #include "native_socket_includes.h"
 
-#include "error.h"
 #include "ip_end_point.h"
 #include "socket.h"
+
 #include "socket_info.h"
-#include "socket_types.h"
-#include "utils.h"
 
 namespace jvs::net
 {

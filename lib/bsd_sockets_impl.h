@@ -8,6 +8,13 @@
 #if !defined(JVS_NETLIB_BSD_SOCKETS_IMPL_H_)
 #define JVS_NETLIB_BSD_SOCKETS_IMPL_H_
 
+#include <optional>
+
+#include "ip_end_point.h"
+#include "socket.h"
+
+#include "socket_info.h"
+
 namespace jvs::net
 {
 
