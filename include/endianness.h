@@ -1,5 +1,24 @@
+//!
+//! @file endianness.h
+//! 
+//! Provides utility functions for determining native system byte ordering as
+//! well as reversing the byte order of integral values.
+//! 
+
 #if !defined(JVS_ENDIANNESS_H_)
 #define JVS_ENDIANNESS_H_
+
+#if (defined(__LITTLE_ENDIAN__) && (__LITTLE_ENDIAN__ == 1)) || \
+  (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__))
+#define JVS_LITTLE_ENDIAN 1
+#elif (defined(__BIG_ENDIAN__) && (__BIG_ENDIAN__ == 1)) || \
+  (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
+#define JVS_BIG_ENDIAN 1
+#endif
+
+#if !defined(JVS_LITTLE_ENDIAN) && !defined(JVS_BIG_ENDIAN)
+#include <cstdint>
+#endif
 
 namespace jvs::net
 {
@@ -10,8 +29,7 @@ enum class ByteOrder
   BigEndian
 };
 
-#if (defined(__LITTLE_ENDIAN__) && (__LITTLE_ENDIAN__ == 1)) || \
-  (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__))
+#if defined(JVS_LITTLE_ENDIAN)
 
 inline constexpr ByteOrder byte_order()
 {
@@ -28,8 +46,7 @@ inline constexpr bool is_big_endian()
   return false;
 }
 
-#elif (defined(__BIG_ENDIAN__) && (__BIG_ENDIAN__ == 1)) || \
-  (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
+#elif defined(JVS_BIG_ENDIAN)
 
 inline constexpr ByteOrder byte_order()
 {
@@ -48,12 +65,10 @@ inline constexpr bool is_little_endian()
 
 #else
 
-#include <cstdint>
-
 inline static ByteOrder byte_order()
 {
   static const std::uint16_t ByteOrderTestBits = 0x0001;
-  char* bytePtr = reinterpret_cast<char*>(&ByteOrderTestBits);
+  const char* bytePtr = reinterpret_cast<const char*>(&ByteOrderTestBits);
   return (bytePtr[0] ? ByteOrder::LittleEndian : ByteOrder::BigEndian);
 }
 
@@ -66,7 +81,6 @@ inline static bool is_little_endian()
 {
   return (byte_order() == ByteOrder::LittleEndian);
 }
-
 
 #endif
 

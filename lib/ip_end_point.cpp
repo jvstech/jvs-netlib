@@ -51,7 +51,6 @@ std::optional<jvs::net::IpEndPoint> jvs::net::IpEndPoint::parse(
   auto address = IpAddress::parse(ipEndPointString.substr(0, addressLen));
   if (address)
   {
-    std::optional<std::uint32_t> portValue;
     if (addressLen == ipEndPointString.length())
     {
       return IpEndPoint(*address, 0);

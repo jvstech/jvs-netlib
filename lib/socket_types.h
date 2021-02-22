@@ -1,29 +1,16 @@
-#if !defined(JVS_NETLIB_BSD_BSD_SOCKETS_H_)
-#define JVS_NETLIB_BSD_BSD_SOCKETS_H_
+#if !defined(JVS_NETLIB_SOCKET_TYPES_H_)
+#define JVS_NETLIB_SOCKET_TYPES_H_
 
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include "native_socket_includes.h"
 
-#include "error.h"
-#include "ip_address.h"
-#include "ip_end_point.h"
 #include "socket.h"
 
-#include "bsd_socket_info.h"
 #include "utils.h"
 
-namespace bsd
+namespace jvs::net
 {
 
-struct SocketInfo;
-
-using jvs::net::IpAddress;
-using jvs::net::IpEndPoint;
-using jvs::net::Socket;
-using Family = IpAddress::Family;
-using Transport = Socket::Transport;
-
-using SocketHandle = jvs::ReturnType<decltype(::socket)>;
+using SocketContext = jvs::ReturnType<decltype(::socket)>;
 
 // Wrapper for network layer transport types in netinet/in.h
 enum class NetworkTransport
@@ -35,7 +22,7 @@ enum class NetworkTransport
 };
 
 // Wrapper for transport layer PDU constants in enum socket_type
-enum class SocketTransport : std::underlying_type_t<decltype(SOCK_STREAM)>
+enum class SocketTransport : int
 {
   Unspecified,
   Stream = SOCK_STREAM,
@@ -149,11 +136,11 @@ static constexpr int get_socket_address_family(
 {
   switch (addressFamily)
   {
-  case Family::IPv4:
+  case IpAddress::Family::IPv4:
     return PF_INET;
-  case Family::IPv6:
+  case IpAddress::Family::IPv6:
     return PF_INET6;
-  case Family::Unspecified:
+  case IpAddress::Family::Unspecified:
     return PF_UNSPEC;
   }
 }
@@ -165,11 +152,11 @@ static constexpr int get_address_family(
 {
   switch (addressFamily)
   {
-  case Family::IPv4:
+  case IpAddress::Family::IPv4:
     return AF_INET;
-  case Family::IPv6:
+  case IpAddress::Family::IPv6:
     return AF_INET6;
-  case Family::Unspecified:
+  case IpAddress::Family::Unspecified:
     return AF_UNSPEC;
   }
 }
@@ -219,45 +206,7 @@ static constexpr socklen_t get_address_length(
   return get_address_length(ep.address().family());
 }
 
+} // namespace jvs::net
 
-// Declarations
 
-addrinfo create_empty_hints() noexcept;
-addrinfo create_hints(Family addressFamily, Transport transport) noexcept;
-IpAddress get_ip_address(const addrinfo& addrInfo) noexcept;
-jvs::Error create_addrinfo_error(int ecode) noexcept;
-jvs::Error create_socket_error(int ecode) noexcept;
-jvs::Expected<IpEndPoint> get_local_endpoint(SocketHandle sockfd) noexcept;
-jvs::Expected<IpEndPoint> get_remote_endpoint(SocketHandle sockfd) noexcept;
-jvs::Expected<SocketInfo> create_socket(
-  Family addressFamily, Transport transport) noexcept;
-jvs::Expected<SocketInfo> create_socket(Transport transport) noexcept;
-
-} // namespace bsd
-
-// jvs namespace injection for ConvertCast
-namespace jvs
-{
-
-template <>
-struct ConvertCast<net::IpEndPoint, sockaddr>
-{
-  sockaddr_storage operator()(const net::IpEndPoint& ep) const noexcept;
-};
-
-template <>
-struct ConvertCast<sockaddr, jvs::net::IpEndPoint>
-{
-  Expected<net::IpEndPoint> operator()(const sockaddr& addr) const noexcept;
-};
-
-template <>
-struct ConvertCast<sockaddr_storage, net::IpEndPoint>
-{
-  Expected<net::IpEndPoint> operator()(
-    const sockaddr_storage& addr) const noexcept;
-};
-
-} // namespace jvs
-
-#endif // !JVS_NETLIB_BSD_BSD_SOCKETS_H_
+#endif // !JVS_NETLIB_SOCKET_TYPES_H_

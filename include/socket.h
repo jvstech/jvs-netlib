@@ -1,3 +1,7 @@
+//!
+//! @file socket.h
+//! 
+
 #if !defined(JVS_NETLIB_SOCKET_H_)
 #define JVS_NETLIB_SOCKET_H_
 
@@ -7,7 +11,6 @@
 #include <optional>
 #include <ostream>
 #include <string>
-#include <string_view>
 #include <utility>
 
 #include "error.h"
@@ -17,7 +20,12 @@
 namespace jvs::net
 {
 
-class Socket
+//!
+//! @class Socket
+//! 
+//! Provides an error-checked wrapper around BSD and Winsock interfaces.
+//! 
+class Socket final
 {
 public:
   Socket(Socket&&);

@@ -1,3 +1,7 @@
+//!
+//! @file ip_address.h
+//! 
+
 #if !defined(JVS_NETLIB_IP_ADDRESS_H_)
 #define JVS_NETLIB_IP_ADDRESS_H_
 
@@ -17,8 +21,14 @@ namespace jvs::net
 inline constexpr unsigned int Ipv4AddressSize = 4;
 inline constexpr unsigned int Ipv6AddressSize = 16;
 
-struct IpAddress
+//!
+//! @class IpAddress
+//! 
+//! Implementation of an address family-agnostic (IPv4 or IPv6) IP address.
+//! 
+class IpAddress final
 {
+public:
   enum class Family
   {
     Unspecified,
@@ -82,6 +92,9 @@ struct IpAddress
   bool is_ipv6_teredo() const noexcept;
   bool is_ipv4_mapped_to_ipv6() const noexcept;
 
+  // The `/` operator is provided as a way of generating host addresses either
+  // via CIDR or subnet notation.
+
   // CIDR notation
   IpAddress operator/(int cidr) const noexcept;
   // Subnet notation
@@ -108,7 +121,6 @@ struct IpAddress
   static std::optional<IpAddress> parse(std::string_view ipAddressString);
   static std::optional<IpAddress> get(
     const std::initializer_list<std::uint8_t>& bytes);
-
 
 private:
 

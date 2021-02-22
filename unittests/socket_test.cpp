@@ -1,7 +1,3 @@
-#if defined(_WIN32) || defined(_WIN64)
-#error "Windows is not yet supported for socket tests."
-#endif
-
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -14,18 +10,76 @@
 #include <string>
 #include <string_view>
 
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN
+#define NOMINMAX
+#include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <arpa/inet.h>
-#include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
+#endif
 
 #include "gtest/gtest.h"
 
 #include "ip_address.h"
 #include "network_integers.h"
 #include "socket.h"
+
+namespace
+{
+
+#if defined(_WIN32)
+
+
+// Winsock versions
+static constexpr WORD WinsockVersions[] = {
+  MAKEWORD(2, 2),
+  MAKEWORD(2, 1),
+  MAKEWORD(2, 0),
+  MAKEWORD(1, 1),
+  MAKEWORD(1, 0)
+};
+
+static void initSockets() noexcept
+{
+  WSADATA data{};
+  int statusCode{WSAVERNOTSUPPORTED};
+  // Try to initialize the Winsock version in descending order.
+  for (int i = 0; i < (sizeof(WinsockVersions) / sizeof(WORD)) &&
+    statusCode == WSAVERNOTSUPPORTED; ++i)
+  {
+    statusCode = ::WSAStartup(WinsockVersions[i], &data);
+  }
+}
+
+static void termSockets() noexcept
+{
+  ::WSACleanup();
+}
+
+#else
+
+static void initSockets() noexcept
+{
+  // Do nothing.
+}
+
+static void termSockets() noexcept
+{
+  // Do nothing.
+}
+
+#endif // _WIN32
+
+} // namespace 
+
 
 namespace jvs
 {
@@ -79,9 +133,11 @@ TEST(SocketTest, GetLocalIPv4Address)
   addrinfo* ainfo;
 
   std::memset(&hints, 0, sizeof(hints));
-  hints.ai_family = AF_UNSPEC;
+  hints.ai_family = AF_INET;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_PASSIVE;    // let the system choose an address
+
+  initSockets();
 
   int status = getaddrinfo(nullptr, "0", &hints, &ainfo);
   EXPECT_EQ(status, 0);
@@ -98,6 +154,8 @@ TEST(SocketTest, GetLocalIPv4Address)
     std::cerr << "getaddrinfo() result = " << status << '\n'
       << gai_strerror(status) << '\n';
   }
+
+  termSockets();
 }
 
 TEST(SocketTest, BindSpecificIpv4)
@@ -303,10 +361,22 @@ TEST(SocketTest, HelloBlockingTcpv4)
             std::cout << "Sent " << *sentSize << " bytes.\n";
             clientResult = true;
           }
+          else
+          {
+            jvs::handle_all_errors(sentSize.take_error(), handleSocketError);
+          }
         }
+      }
+      else
+      {
+        jvs::handle_all_errors(receivedSize.take_error(), handleSocketError);
       }
 
       client.close();
+    }
+    else
+    {
+      jvs::handle_all_errors(serverEp.take_error(), handleSocketError);
     }
 
     return clientResult;

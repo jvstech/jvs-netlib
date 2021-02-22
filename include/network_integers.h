@@ -10,53 +10,14 @@
 namespace jvs::net
 {
 
-using NetworkI8 = std::int8_t;
-using NetworkU8 = std::uint8_t;
-
-#if (defined(__BIG_ENDIAN__) && (__BIG_ENDIAN__ == 1)) || \
-  (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
-
-using NetworkI16 = std::int16_t;
-using NetworkI32 = std::int32_t;
-using NetworkI64 = std::int64_t;
-using NetworkU16 = std::uint16_t;
-using NetworkU32 = std::uint32_t;
-using NetworkU64 = std::uint64_t;
-
 template <typename T>
-struct NetworkInteger final
+class NetworkInteger final
 {
   static_assert(std::is_integral_v<T>);
-
-  NetworkInteger() = default;
-  NetworkInteger(const NetworkInteger&) = default;
-  NetworkInteger(NetworkInteger&&) = default;
-  NetworkInteger& operator=(const NetworkInteger&) = default;
-  NetworkInteger& operator=(NetworkInteger&&) = default;
-
-  NetworkInteger(T value)
-    : network_value_(value)
-  {
-  }
-
-  operator T() const noexcept
-  {
-    return network_value_;
-  }
-
-private:
-  T network_value_;
-};
-
-#else
-
-template <typename T>
-struct NetworkInteger final
-{
-  static_assert(std::is_integral_v<T>);
+public:
 
   template <typename OtherT>
-  friend struct NetworkInteger;
+  friend class NetworkInteger;
 
   NetworkInteger() = default;
   NetworkInteger(const NetworkInteger&) = default;
@@ -83,12 +44,22 @@ struct NetworkInteger final
   {
   }
 
-  inline T value() const noexcept
+  T value() const noexcept
   {
     return jvs::net::to_host_order(network_value_);
   }
 
-  inline T network_value() const noexcept
+  T host_value() const noexcept
+  {
+    return value();
+  }
+
+  T network_value() const noexcept
+  {
+    return network_value_;
+  }
+
+  explicit operator T() const noexcept
   {
     return network_value_;
   }
@@ -247,8 +218,6 @@ using NetworkI64 = NetworkInteger<std::int64_t>;
 using NetworkU16 = NetworkInteger<std::uint16_t>;
 using NetworkU32 = NetworkInteger<std::uint32_t>;
 using NetworkU64 = NetworkInteger<std::uint64_t>;
-
-#endif // !__BIG_ENDIAN__
 
 template <typename DstT, typename SrcT>
 inline static DstT alias_cast(SrcT* src)
