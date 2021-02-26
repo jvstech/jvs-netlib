@@ -7,6 +7,17 @@
 
 #include "try_parse.h"
 
+namespace
+{
+
+// "255.255.255.255\0"
+inline constexpr std::size_t Ipv4AddressLength = 16;
+// "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255%4294967295\0"
+inline constexpr std::size_t Ipv6AddressLength = 57;
+
+} // namespace 
+
+
 jvs::net::IpEndPoint::IpEndPoint(
   jvs::net::IpAddress address, jvs::net::NetworkU16 port)
   : address_(address),
@@ -71,8 +82,22 @@ std::optional<jvs::net::IpEndPoint> jvs::net::IpEndPoint::parse(
 
 std::string jvs::net::to_string(const IpEndPoint& ep) noexcept
 {
-  return jvs::net::to_string(ep.address()) + ':' +
-    std::to_string(ep.port().value());
+  if (ep.address().family() == IpAddress::Family::IPv6)
+  {
+    std::string result;
+    // Reserve enough space to hold the maximum length IPv6 address string plus
+    // brackets, a colon for the port separator, and a 5-digit decimal integer
+    // string for the port.
+    result.reserve(Ipv6AddressLength + 8);
+    result.append("[")
+      .append(to_string(ep.address()))
+      .append("]:")
+      .append(std::to_string(ep.port().value()));
+    result.shrink_to_fit();
+    return result;
+  }
+
+  return to_string(ep.address()) + ':' + std::to_string(ep.port().value());
 }
 
 std::string jvs::ConvertCast<jvs::net::IpEndPoint, std::string>::operator()(

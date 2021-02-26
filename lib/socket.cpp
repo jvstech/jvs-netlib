@@ -65,6 +65,8 @@ struct ConvertCast<IpEndPoint, sockaddr>
 namespace
 {
 
+using GetNameFunc = decltype(::getsockname)*;
+
 static IpAddress get_ip_address(const addrinfo& addrInfo) noexcept
 {
   if (addrInfo.ai_family == AF_INET)
@@ -85,44 +87,41 @@ static IpAddress get_ip_address(const addrinfo& addrInfo) noexcept
   }
 }
 
-static Expected<IpEndPoint> get_local_endpoint(SocketContext ctx) noexcept
+static Expected<IpEndPoint> get_endpoint(
+  SocketContext ctx, GetNameFunc nameFunc)
 {
-  sockaddr_storage localAddrInfo{};
-  socklen_t addrLen{};
-  int result =
-    ::getsockname(ctx, reinterpret_cast<sockaddr*>(&localAddrInfo), &addrLen);
+  if (!nameFunc)
+  {
+    return IpEndPoint{};
+  }
+
+  sockaddr_storage addrInfo{};
+  socklen_t addrLen = static_cast<socklen_t>(sizeof(addrInfo));
+  int result = nameFunc(ctx, reinterpret_cast<sockaddr*>(&addrInfo), &addrLen);
   if (is_error_result(result))
   {
-    return jvs::net::create_socket_error(result);
+    return jvs::net::create_socket_error(ctx);
   }
 
-  auto localEndPoint = jvs::convert_to<IpEndPoint>(localAddrInfo);
-  if (localEndPoint)
+  auto endPoint = jvs::convert_to<IpEndPoint>(addrInfo);
+  if (endPoint)
   {
-    return *localEndPoint;
+    return *endPoint;
   }
 
-  return localEndPoint.take_error();
+  return endPoint.take_error();
+}
+
+static Expected<IpEndPoint> get_local_endpoint(SocketContext ctx) noexcept
+{
+  static_assert(std::is_same_v<GetNameFunc, decltype(::getsockname)*>);
+  return get_endpoint(ctx, ::getsockname);
 }
 
 static Expected<IpEndPoint> get_remote_endpoint(SocketContext ctx) noexcept
 {
-  sockaddr_storage remoteAddrInfo{};
-  socklen_t addrLen{};
-  int result =
-    ::getpeername(ctx, reinterpret_cast<sockaddr*>(&remoteAddrInfo), &addrLen);
-  if (is_error_result(result))
-  {
-    return create_socket_error(get_last_error());
-  }
-
-  auto remoteEndPoint = jvs::convert_to<jvs::net::IpEndPoint>(remoteAddrInfo);
-  if (remoteEndPoint)
-  {
-    return *remoteEndPoint;
-  }
-
-  return remoteEndPoint.take_error();
+  static_assert(std::is_same_v<GetNameFunc, decltype(::getpeername)*>);
+  return get_endpoint(ctx, ::getpeername);
 }
 
 } // namespace
@@ -207,6 +206,7 @@ SocketInfo::SocketInfo(SocketContext ctx)
   if (auto localEndpoint = get_local_endpoint(ctx))
   {
     address_ = localEndpoint->address();
+    port_ = localEndpoint->port();
     family_ = address_.family();
   }
 }
@@ -389,13 +389,14 @@ Expected<Socket> Socket::accept() noexcept
   socklen_t addrLen;
   auto remoteCtx = ::accept(impl_->socket_info_.context(),
     reinterpret_cast<sockaddr*>(&remoteAddrInfo), &addrLen);
-  if (remoteCtx == static_cast<decltype(remoteCtx)>(-1))
+  if (is_error_result(remoteCtx))
   {
-    return create_socket_error(get_last_error());
+    return create_socket_error(impl_->socket_info_.context());
   }
 
   SocketImpl* impl = new SocketImpl(remoteCtx);
   Socket remoteSock(impl);
+  remoteSock.impl_->update_remote_endpoint();
   return remoteSock;
 }
 
@@ -406,7 +407,7 @@ Expected<IpEndPoint> Socket::bind(IpEndPoint localEndPoint) noexcept
     reinterpret_cast<sockaddr*>(&addrinfo), get_address_length(localEndPoint));
   if (is_error_result(result))
   {
-    return create_socket_error(get_last_error());
+    return create_socket_error(impl_->socket_info_.context());
   }
 
   impl_->update_local_endpoint();
@@ -442,7 +443,7 @@ Expected<IpEndPoint> Socket::connect(IpEndPoint remoteEndPoint) noexcept
     reinterpret_cast<sockaddr*>(&remoteInfo), remoteLen);
   if (is_error_result(result))
   {
-    return create_socket_error(get_last_error());
+    return create_socket_error(impl_->socket_info_.context());
   }
 
   impl_->update_remote_endpoint();
@@ -465,7 +466,7 @@ Expected<IpEndPoint> Socket::listen(int backlog) noexcept
   int result = ::listen(impl_->socket_info_.context(), backlog);
   if (result != 0)
   {
-    return create_socket_error(get_last_error());
+    return create_socket_error(impl_->socket_info_.context());
   }
 
   impl_->update_local_endpoint();
@@ -485,7 +486,7 @@ Expected<std::size_t> Socket::recv(
       reinterpret_cast<char*>(buffer), length, flags));
   if (is_error_result(receivedSize))
   {
-    return create_socket_error(get_last_error());
+    return create_socket_error(impl_->socket_info_.context());
   }
 
   return receivedSize;
@@ -506,7 +507,7 @@ Expected<std::pair<std::size_t, IpEndPoint>> Socket::recvfrom(
       length, flags, reinterpret_cast<sockaddr*>(&remoteInfo), &remoteSize));
   if (is_error_result(receivedSize))
   {
-    return create_socket_error(get_last_error());
+    return create_socket_error(impl_->socket_info_.context());
   }
 
   auto remoteEndpoint = convert_to<IpEndPoint>(remoteInfo);
@@ -532,7 +533,7 @@ Expected<std::size_t> Socket::send(
       reinterpret_cast<const char*>(buffer), length, flags));
   if (is_error_result(sentSize))
   {
-    return create_socket_error(get_last_error());
+    return create_socket_error(impl_->socket_info_.context());
   }
 
   return sentSize;
@@ -554,7 +555,7 @@ Expected<std::size_t> Socket::sendto(const void* buffer, std::size_t length,
     length, flags, reinterpret_cast<const sockaddr*>(&remoteInfo), addrLen));
   if (is_error_result(sentSize))
   {
-    return create_socket_error(get_last_error());
+    return create_socket_error(impl_->socket_info_.context());
   }
 
   return sentSize;

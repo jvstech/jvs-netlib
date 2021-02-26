@@ -26,6 +26,8 @@ addrinfo create_hints(
 jvs::Expected<SocketInfo> create_socket(
   IpAddress::Family addressFamily, Socket::Transport transport) noexcept;
 
+jvs::Error create_socket_error(SocketContext s) noexcept;
+
 template <typename ResultT>
 static constexpr bool is_error_result(ResultT result) noexcept
 {

@@ -298,13 +298,13 @@ static std::string ipv4_to_string(const std::uint8_t* addrBytes)
   std::string result{};
   result.reserve(Ipv4AddressLength);
   result
-    .append(std::to_string(addrBytes[0]))
+    .append(std::to_string(static_cast<int>(addrBytes[0])))
     .append(".")
-    .append(std::to_string(addrBytes[1]))
+    .append(std::to_string(static_cast<int>(addrBytes[1])))
     .append(".")
-    .append(std::to_string(addrBytes[2]))
+    .append(std::to_string(static_cast<int>(addrBytes[2])))
     .append(".")
-    .append(std::to_string(addrBytes[3]))
+    .append(std::to_string(static_cast<int>(addrBytes[3])))
     ;
   result.shrink_to_fit();
   return result;

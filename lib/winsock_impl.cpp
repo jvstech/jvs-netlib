@@ -168,7 +168,6 @@ int jvs::net::get_last_error() noexcept
   return ::WSAGetLastError();
 }
 
-
 // Winsock-specific Socket member implementations
 ////////////////////////////////////////////////////////////////////////////////
 

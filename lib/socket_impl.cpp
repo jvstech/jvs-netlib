@@ -61,3 +61,17 @@ Expected<SocketInfo> jvs::net::create_socket(
     return create_addrinfo_error(status);
   }
 }
+
+Error jvs::net::create_socket_error(SocketContext s) noexcept
+{
+  int ecode{};
+  socklen_t codeSize = static_cast<socklen_t>(sizeof(ecode));
+  auto result = ::getsockopt(
+    s, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&ecode), &codeSize);
+  if (is_error_result(result))
+  {
+    return create_socket_error(get_last_error());
+  }
+
+  return create_socket_error(ecode);
+}
