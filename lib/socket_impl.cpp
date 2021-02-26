@@ -7,7 +7,7 @@
 
 #include "socket_impl.h"
 
-#include "native_socket_includes.h"
+#include "native_sockets.h"
 
 #include "socket_types.h"
 #include "utils.h"
@@ -66,11 +66,12 @@ Error jvs::net::create_socket_error(SocketContext s) noexcept
 {
   int ecode{};
   socklen_t codeSize = static_cast<socklen_t>(sizeof(ecode));
+  int lastErr = get_last_error();
   auto result = ::getsockopt(
     s, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&ecode), &codeSize);
-  if (is_error_result(result))
+  if (is_error_result(result) || (lastErr != 0 && ecode == 0))
   {
-    return create_socket_error(get_last_error());
+    return create_socket_error(lastErr);
   }
 
   return create_socket_error(ecode);

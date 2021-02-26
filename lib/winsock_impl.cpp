@@ -3,7 +3,7 @@
 #include <string>
 #include <tuple>
 
-#include "native_socket_includes.h"
+#include "native_sockets.h"
 
 #include "socket.h"
 
@@ -104,7 +104,8 @@ jvs::Error jvs::net::create_socket_error(int ecode) noexcept
 
   LPWSTR errorText = nullptr;
   DWORD charCount = ::FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM |
-      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
+      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS |
+      FORMAT_MESSAGE_MAX_WIDTH_MASK,
     /*lpSource*/ nullptr, static_cast<DWORD>(ecode),
     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
     reinterpret_cast<LPWSTR>(&errorText), /*nSize*/ 0,

@@ -19,12 +19,13 @@ namespace jvs::net
 {
 
 //!
-//! @struct IpEndPoint
+//! @class IpEndPoint
 //! 
 //! Named tuple representing bound IP addresses and ports.
 //! 
-struct IpEndPoint final
+class IpEndPoint final
 {
+public:
   IpEndPoint() = default;
 
   IpEndPoint(IpAddress address, NetworkU16 port);

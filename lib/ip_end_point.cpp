@@ -42,7 +42,7 @@ std::optional<jvs::net::IpEndPoint> jvs::net::IpEndPoint::parse(
   std::size_t lastColonPos = ipEndPointString.find_last_of(':');
 
   // Check for an IPv6 address with a port.
-  if (lastColonPos > 0 && lastColonPos != std::string::npos)
+  if (lastColonPos > 0 && lastColonPos != std::string_view::npos)
   {
     if (ipEndPointString[lastColonPos - 1] == ']')
     {
@@ -82,22 +82,30 @@ std::optional<jvs::net::IpEndPoint> jvs::net::IpEndPoint::parse(
 
 std::string jvs::net::to_string(const IpEndPoint& ep) noexcept
 {
+  std::string result;
   if (ep.address().family() == IpAddress::Family::IPv6)
   {
-    std::string result;
     // Reserve enough space to hold the maximum length IPv6 address string plus
     // brackets, a colon for the port separator, and a 5-digit decimal integer
     // string for the port.
     result.reserve(Ipv6AddressLength + 8);
     result.append("[")
       .append(to_string(ep.address()))
-      .append("]:")
-      .append(std::to_string(ep.port().value()));
-    result.shrink_to_fit();
-    return result;
+      .append("]");
+  }
+  else if (ep.address().family() == IpAddress::Family::IPv4)
+  {
+    // Reserve enough space to hold the maximum length IPv4 address string plus
+    // a colon for the port separator and a 5-digit decimal integer string for
+    // the port.
+    result.reserve(Ipv4AddressLength + 6);
+    result.append(to_string(ep.address()))
+      .append(":");
   }
 
-  return to_string(ep.address()) + ':' + std::to_string(ep.port().value());
+  result.append(std::to_string(ep.port().value()));
+  result.shrink_to_fit();
+  return result;
 }
 
 std::string jvs::ConvertCast<jvs::net::IpEndPoint, std::string>::operator()(

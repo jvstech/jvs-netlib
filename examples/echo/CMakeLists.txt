@@ -18,3 +18,4 @@ function(add_netlib_example exampleName)
 endfunction()
 
 add_netlib_example(echo-server-tcp echo_server_tcp.cpp)
+add_netlib_example(echo-client-tcp echo_client_tcp.cpp)

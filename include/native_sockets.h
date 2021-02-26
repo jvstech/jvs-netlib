@@ -1,5 +1,5 @@
-#if !defined(JVS_NETLIB_NATIVE_SOCKET_INCLUDES_H_)
-#define JVS_NETLIB_NATIVE_SOCKET_INCLUDES_H_
+#if !defined(JVS_NETLIB_NATIVE_SOCKETS_H_)
+#define JVS_NETLIB_NATIVE_SOCKETS_H_
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -17,4 +17,4 @@
 #include <unistd.h>
 #endif
 
-#endif // !JVS_NETLIB_NATIVE_SOCKET_INCLUDES_H_
+#endif // !JVS_NETLIB_NATIVE_SOCKETS_H_

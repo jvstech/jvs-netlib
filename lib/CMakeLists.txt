@@ -12,7 +12,8 @@ set(srcFiles
   ip_end_point.cpp
   socket.cpp
   socket_errors.cpp
-  socket_impl.cpp)
+  socket_impl.cpp
+  transport_end_point.cpp)
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
   list(APPEND srcFiles ${NETLIB_LIB_DIR}/winsock_impl.cpp)
@@ -27,8 +28,10 @@ set(pubIncFileNames
   error.h
   ip_address.h
   ip_end_point.h
+  native_sockets.h
   network_integers.h
-  socket.h)
+  socket.h
+  transport_end_point.h)
 
 foreach(pubIncFileName ${pubIncFileNames})
   list(APPEND pubIncFiles "${NETLIB_INC_DIR}/${pubIncFileName}")

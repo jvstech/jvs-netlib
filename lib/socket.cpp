@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <type_traits>
 
-#include "native_socket_includes.h"
+#include "native_sockets.h"
 
 #include "convert_cast.h"
 #include "error.h"
@@ -381,6 +381,11 @@ IpEndPoint Socket::local() const noexcept
 const std::optional<IpEndPoint>& Socket::remote() const noexcept
 {
   return impl_->remote_endpoint_;
+}
+
+std::intptr_t Socket::descriptor() const noexcept
+{
+  return static_cast<std::intptr_t>(impl_->socket_info_.context());
 }
 
 Expected<Socket> Socket::accept() noexcept

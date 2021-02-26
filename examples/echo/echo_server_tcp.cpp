@@ -39,16 +39,10 @@ int main(int argc, char** argv)
     localEpStr = argv[1];
   }
 
-  auto socket_err = [&](const SocketError& e)
+  auto errHandler = [](const ErrorInfoBase& e)
   {
     reportError(e);
   };
-  
-  auto message_err = [&](const StringError& e)
-  {
-    reportError(e);
-  };
-
 
   if (auto requestedEp = IpEndPoint::parse(localEpStr))
   {
@@ -107,7 +101,7 @@ int main(int argc, char** argv)
                   else
                   {
                     handle_all_errors(
-                      receivedSize.take_error(), socket_err);
+                      receivedSize.take_error(), errHandler);
                   }
                 }                
               }, std::move(*connection));
@@ -115,25 +109,25 @@ int main(int argc, char** argv)
           }
           else
           {
-            handle_all_errors(connection.take_error(), socket_err);
+            handle_all_errors(connection.take_error(), errHandler);
           }
         }
       }
       else
       {
-        handle_all_errors(listenEp.take_error(), socket_err);
+        handle_all_errors(listenEp.take_error(), errHandler);
       }
     }
     else
     {
-      handle_all_errors(boundEp.take_error(), socket_err);
+      handle_all_errors(boundEp.take_error(), errHandler);
     }
   }
   else
   {
     handle_all_errors(
       create_string_error("Unable to parse endpoint: ", localEpStr),
-      message_err);
+      errHandler);
   }
 
   return 0;

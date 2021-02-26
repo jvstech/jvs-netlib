@@ -38,11 +38,11 @@ public:
     Raw
   };
 
-  Socket(Transport transport);
   Socket(net::IpAddress::Family addressFamily, Transport transport);
 
   IpEndPoint local() const noexcept;
   const std::optional<IpEndPoint>& remote() const noexcept;
+  std::intptr_t descriptor() const noexcept;
 
   Expected<Socket> accept() noexcept;
 

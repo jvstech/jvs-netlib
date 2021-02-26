@@ -1,7 +1,7 @@
 #if !defined(JVS_NETLIB_SOCKET_TYPES_H_)
 #define JVS_NETLIB_SOCKET_TYPES_H_
 
-#include "native_socket_includes.h"
+#include "native_sockets.h"
 
 #include "socket.h"
 
