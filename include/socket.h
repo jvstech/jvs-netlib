@@ -16,6 +16,7 @@
 #include "error.h"
 #include "ip_address.h"
 #include "ip_end_point.h"
+#include "socket_errors.h"
 
 namespace jvs::net
 {
@@ -28,9 +29,6 @@ namespace jvs::net
 class Socket final
 {
 public:
-  Socket(Socket&&);
-  ~Socket();
-
   enum class Transport
   {
     Tcp,
@@ -38,13 +36,22 @@ public:
     Raw
   };
 
+  Socket(Socket&&);
+  ~Socket();
+
   Socket(net::IpAddress::Family addressFamily, Transport transport);
 
+  // Bound/listening endpoint.
   IpEndPoint local() const noexcept;
+  // Remote endpoint of the communication, if any.
   const std::optional<IpEndPoint>& remote() const noexcept;
+  // Handle/context/file descriptor of the native socket resource.
   std::intptr_t descriptor() const noexcept;
 
   Expected<Socket> accept() noexcept;
+
+  // Number of bytes available for reading from the socket.
+  Expected<std::size_t> available() noexcept;
 
   Expected<IpEndPoint> bind(IpEndPoint localEndPoint) noexcept;
   Expected<IpEndPoint> bind(IpAddress localAddress, NetworkU16 localPort) 
@@ -83,37 +90,6 @@ private:
   std::unique_ptr<SocketImpl> impl_;
 
   Socket(SocketImpl* impl);
-};
-
-class SocketError : public jvs::ErrorInfo<SocketError>
-{
-  int code_;
-  std::string message_;
-public:
-
-  static char ID;
-
-  SocketError(int code, const std::string& message);
-
-  int code() const noexcept;
-
-  void log(std::ostream& os) const override;
-};
-
-class NonBlockingStatus : public jvs::ErrorInfo<NonBlockingStatus>
-{
-public:
-  static char ID;
-  NonBlockingStatus();
-  void log(std::ostream& os) const override;
-};
-
-class UnsupportedOperationError : public ErrorInfo<UnsupportedOperationError>
-{
-public:
-  static char ID;
-  UnsupportedOperationError();
-  void log(std::ostream& os) const override;
 };
 
 } // namespace jvs::net

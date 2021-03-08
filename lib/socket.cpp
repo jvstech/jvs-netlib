@@ -18,6 +18,8 @@
 #include "ip_address.h"
 #include "ip_end_point.h"
 #include "network_integers.h"
+#include "socket_context.h"
+#include "socket_errors.h"
 
 #include "socket_impl.h"
 #include "socket_info.h"
@@ -149,8 +151,8 @@ Expected<IpEndPoint> ConvertCast<sockaddr, IpEndPoint>::operator()(
       NetworkU16::from_network_order(ipv6Addr.sin6_port));
   }
 
-  // Unknown address family; emit an unsupported operation error.
-  return jvs::make_error<UnsupportedOperationError>();
+  // Unknown address family; emit an error.
+  return jvs::net::create_socket_error(errcodes::EAFNoSupport);
 }
 
 Expected<IpEndPoint> ConvertCast<sockaddr_storage, IpEndPoint>::operator()(
@@ -391,7 +393,7 @@ std::intptr_t Socket::descriptor() const noexcept
 Expected<Socket> Socket::accept() noexcept
 {
   sockaddr_storage remoteAddrInfo{};
-  socklen_t addrLen;
+  socklen_t addrLen = static_cast<socklen_t>(sizeof(remoteAddrInfo));
   auto remoteCtx = ::accept(impl_->socket_info_.context(),
     reinterpret_cast<sockaddr*>(&remoteAddrInfo), &addrLen);
   if (is_error_result(remoteCtx))
@@ -399,7 +401,7 @@ Expected<Socket> Socket::accept() noexcept
     return create_socket_error(impl_->socket_info_.context());
   }
 
-  SocketImpl* impl = new SocketImpl(remoteCtx);
+  SocketImpl* impl = new SocketImpl(SocketContext(remoteCtx));
   Socket remoteSock(impl);
   remoteSock.impl_->update_remote_endpoint();
   return remoteSock;
@@ -506,7 +508,7 @@ Expected<std::pair<std::size_t, IpEndPoint>> Socket::recvfrom(
   void* buffer, std::size_t length, int flags) noexcept
 {
   sockaddr_storage remoteInfo{};
-  socklen_t remoteSize{};
+  socklen_t remoteSize = static_cast<socklen_t>(sizeof(remoteInfo));
   std::size_t receivedSize = static_cast<std::size_t>(
     ::recvfrom(impl_->socket_info_.context(), reinterpret_cast<char*>(buffer),
       length, flags, reinterpret_cast<sockaddr*>(&remoteInfo), &remoteSize));
@@ -515,13 +517,19 @@ Expected<std::pair<std::size_t, IpEndPoint>> Socket::recvfrom(
     return create_socket_error(impl_->socket_info_.context());
   }
 
-  auto remoteEndpoint = convert_to<IpEndPoint>(remoteInfo);
-  if (remoteEndpoint)
+  if (remoteSize != 0)
   {
-    return std::make_pair(receivedSize, *remoteEndpoint);
+    auto remoteEndpoint = convert_to<IpEndPoint>(remoteInfo);
+    if (remoteEndpoint)
+    {
+      impl_->remote_endpoint_ = *remoteEndpoint;
+      return std::make_pair(receivedSize, *remoteEndpoint);
+    }
+
+    return remoteEndpoint.take_error();
   }
 
-  return remoteEndpoint.take_error();
+  return std::make_pair(receivedSize, IpEndPoint{});
 }
 
 Expected<std::pair<std::size_t, IpEndPoint>> Socket::recvfrom(

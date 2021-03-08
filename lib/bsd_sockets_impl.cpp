@@ -1,13 +1,16 @@
 #include "bsd_sockets_impl.h"
 
+#include <sys/ioctl.h>
 #include "native_sockets.h"
 
 #include "socket.h"
+#include "socket_errors.h"
 
 #include "socket_impl.h"
 #include "utils.h"
 
 using namespace jvs::net;
+using namespace jvs::net::errcodes;
 using Family = IpAddress::Family;
 using Transport = Socket::Transport;
 
@@ -44,28 +47,41 @@ const std::optional<IpEndPoint>& Socket::SocketImpl::remote_endpoint()
   return remote_endpoint_;
 }
 
-jvs::Error jvs::net::create_socket_error(int ecode) noexcept
-{
-  if (ecode == EAGAIN || ecode == EWOULDBLOCK)
-  {
-    return jvs::make_error<NonBlockingStatus>();
-  }
-
-  return jvs::make_error<SocketError>(ecode, strerror(ecode));
-}
-
-jvs::Error jvs::net::create_addrinfo_error(int ecode) noexcept
-{
-  return jvs::make_error<SocketError>(ecode, gai_strerror(ecode));
-}
-
 int jvs::net::get_last_error() noexcept
 {
   return errno;
 }
 
+std::string jvs::net::get_socket_error_message(int ecode) noexcept
+{
+  return strerror(ecode);
+}
+
+std::string jvs::net::get_addrinfo_error_message(int ecode) noexcept
+{
+  return gai_strerror(ecode);
+}
+
 // BSD API-specific Socket member implementations
 ////////////////////////////////////////////////////////////////////////////////
+
+jvs::Expected<std::size_t> Socket::available() noexcept
+{
+  auto ctx = impl_->socket_info_.context();
+  int err = 0;
+  int bytesAvailable = 0;
+  while ((err = ioctl(ctx, FIONREAD, &bytesAvailable)) < 0 &&
+    get_last_error() == EINTR)
+  {
+  }
+
+  if (is_error_result(err))
+  {
+    return jvs::net::create_socket_error(err);
+  }
+
+  return static_cast<std::size_t>(bytesAvailable);
+}
 
 // See winsock_impl.cpp as to why this can't be implemented as a common
 // function.

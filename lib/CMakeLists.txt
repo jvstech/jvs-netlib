@@ -11,6 +11,7 @@ set(srcFiles
   ip_address.cpp
   ip_end_point.cpp
   socket.cpp
+  socket_context.cpp
   socket_errors.cpp
   socket_impl.cpp
   transport_end_point.cpp)
@@ -31,6 +32,8 @@ set(pubIncFileNames
   native_sockets.h
   network_integers.h
   socket.h
+  socket_context.h
+  socket_errors.h
   transport_end_point.h)
 
 foreach(pubIncFileName ${pubIncFileNames})

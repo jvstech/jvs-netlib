@@ -17,5 +17,5 @@ function(add_netlib_example exampleName)
       CXX_STANDARD_REQUIRED ON)
 endfunction()
 
-add_netlib_example(echo-server-tcp echo_server_tcp.cpp)
-add_netlib_example(echo-client-tcp echo_client_tcp.cpp)
+add_netlib_example(echo-server echo_server.cpp)
+add_netlib_example(echo-client echo_client.cpp)

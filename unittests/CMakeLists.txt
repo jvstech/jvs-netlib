@@ -23,6 +23,7 @@ set(testSources
   ip_end_point_test.cpp
   network_integer_test.cpp
   socket_test.cpp
+  transport_end_point_test.cpp
   )
 
 add_executable(jvs-netlib-test ${testSources})

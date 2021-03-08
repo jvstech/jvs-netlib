@@ -9,11 +9,15 @@
 
 #include "native_sockets.h"
 
+#include "socket_errors.h"
+
+#include "socket_context.h"
 #include "socket_types.h"
 #include "utils.h"
 
 using namespace jvs;
 using namespace jvs::net;
+using namespace jvs::net::errcodes;
 using Family = IpAddress::Family;
 using Transport = Socket::Transport;
 
@@ -62,6 +66,27 @@ Expected<SocketInfo> jvs::net::create_socket(
   }
 }
 
+Error jvs::net::create_socket_error(int ecode) noexcept
+{
+  if (!ecode)
+  {
+    return Error::success();
+  }
+
+  if (ecode == EAgain || ecode == EWouldBlock || ecode == EInProgress)
+  {
+    return jvs::make_error<NonBlockingStatus>(ecode);
+  }
+
+  if (ecode == EOpNotSupp || ecode == EAFNoSupport || ecode == EPFNoSupport ||
+    ecode == EProtoNoSupport || ecode == ESockTNoSupport)
+  {
+    return jvs::make_error<UnsupportedError>(ecode);
+  }
+
+  return jvs::make_error<SocketError>(ecode);
+}
+
 Error jvs::net::create_socket_error(SocketContext s) noexcept
 {
   int ecode{};
@@ -75,4 +100,9 @@ Error jvs::net::create_socket_error(SocketContext s) noexcept
   }
 
   return create_socket_error(ecode);
+}
+
+Error jvs::net::create_addrinfo_error(int ecode) noexcept
+{
+  return jvs::make_error<AddressInfoError>(ecode);
 }

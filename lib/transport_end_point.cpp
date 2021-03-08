@@ -42,9 +42,10 @@ std::optional<jvs::net::TransportEndPoint> jvs::net::TransportEndPoint::parse(
     }
     else
     {
+      auto lcase = [](int c) { return std::tolower(c); };
       std::string transportString(transportEndPointString.substr(epLen + 1));
       std::transform(transportString.begin(), transportString.end(),
-        transportString.begin(), std::tolower);
+        transportString.begin(), lcase);
       if (transportString == "tcp")
       {
         return TransportEndPoint(*ipEndPoint, Socket::Transport::Tcp);

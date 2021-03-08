@@ -4,13 +4,12 @@
 #include "native_sockets.h"
 
 #include "socket.h"
+#include "socket_context.h"
 
 #include "utils.h"
 
 namespace jvs::net
 {
-
-using SocketContext = jvs::ReturnType<decltype(::socket)>;
 
 // Wrapper for network layer transport types in netinet/in.h
 enum class NetworkTransport

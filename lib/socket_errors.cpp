@@ -1,4 +1,6 @@
-#include "socket.h"
+#include "socket_errors.h"
+
+#include "socket_impl.h"
 
 char jvs::net::SocketError::ID = 0;
 
@@ -8,9 +10,19 @@ jvs::net::SocketError::SocketError(int code, const std::string& message)
 {
 }
 
+jvs::net::SocketError::SocketError(int code)
+  : SocketError(code, get_socket_error_message(code))
+{
+}
+
 int jvs::net::SocketError::code() const noexcept
 {
   return code_;
+}
+
+bool jvs::net::SocketError::is_fatal() const
+{
+  return true;
 }
 
 void jvs::net::SocketError::log(std::ostream& os) const
@@ -19,20 +31,21 @@ void jvs::net::SocketError::log(std::ostream& os) const
     << ")";
 }
 
+char jvs::net::SocketErrorNonFatal::ID = 0;
+
+bool jvs::net::SocketErrorNonFatal::is_fatal() const
+{
+  return false;
+}
+
+char jvs::net::AddressInfoError::ID = 0;
+
+jvs::net::AddressInfoError::AddressInfoError(int code)
+  : Base(code, get_addrinfo_error_message(code))
+{
+}
+
 char jvs::net::NonBlockingStatus::ID = 0;
 
-jvs::net::NonBlockingStatus::NonBlockingStatus() = default;
+char jvs::net::UnsupportedError::ID = 0;
 
-void jvs::net::NonBlockingStatus::log(std::ostream& os) const
-{
-  os << "Socket is non-blocking, and the operation would block.";
-}
-
-char jvs::net::UnsupportedOperationError::ID = 0;
-
-jvs::net::UnsupportedOperationError::UnsupportedOperationError() = default;
-
-void jvs::net::UnsupportedOperationError::log(std::ostream& os) const
-{
-  os << "Unsupported operation.";
-}

@@ -16,6 +16,12 @@
 #if !defined(JVS_NETLIB_ERROR_H_)
 #define JVS_NETLIB_ERROR_H_
 
+#if !defined(ENABLE_FORCED_ERROR_CHECKING)
+# if !defined(NDEBUG)
+#   define ENABLE_FORCED_ERROR_CHECKING 1
+# endif
+#endif
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -83,6 +89,12 @@ public:
   bool is_a() const
   {
     return is_a(ErrorInfoT::class_id());
+  }
+
+  // Determine whether or not this error should be forced to be checked.
+  virtual bool is_fatal() const
+  {
+    return true;
   }
 
 private:
@@ -255,7 +267,10 @@ public:
   const void* dynamic_class_id() const
   {
     if (!get_ptr())
+    {
       return nullptr;
+    }
+
     return get_ptr()->dynamic_class_id();
   }
 
@@ -270,8 +285,10 @@ private:
 
   void assert_is_checked()
   {
-    if ((!get_checked() || get_ptr()))
+    if ((!get_checked() || (get_ptr() && get_ptr()->is_fatal())))
+    {
       fatal_unchecked_error();
+    }
   }
 
   ErrorInfoBase* get_ptr() const
@@ -310,9 +327,14 @@ private:
   friend std::ostream& operator<<(std::ostream& os, const Error& E)
   {
     if (auto P = E.get_ptr())
+    {
       P->log(os);
+    }
     else
+    {
       os << "success";
+    }
+
     return os;
   }
 
@@ -351,6 +373,9 @@ Error make_error(ArgTs&&... Args)
 template <typename ThisErrT, typename ParentErrT = ErrorInfoBase>
 class ErrorInfo : public ParentErrT
 {
+protected:
+  using Base = ErrorInfo<ThisErrT, ParentErrT>;
+
 public:
   using ParentErrT::ParentErrT;  // inherit constructors
 
@@ -409,9 +434,15 @@ private:
   static Error join(Error e1, Error e2)
   {
     if (!e1)
+    {
       return e2;
+    }
+
     if (!e2)
+    {
       return e1;
+    }
+
     if (e1.is_a<ErrorList>())
     {
       auto& e1List = static_cast<ErrorList&>(*e1.get_ptr());
@@ -420,10 +451,14 @@ private:
         auto e2Payload = e2.take_payload();
         auto& e2List = static_cast<ErrorList&>(*e2Payload);
         for (auto& payload : e2List.payloads_)
+        {
           e1List.payloads_.push_back(std::move(payload));
+        }
       }
       else
+      {
         e1List.payloads_.push_back(e2.take_payload());
+      }
 
       return e1;
     }
@@ -554,15 +589,19 @@ public:
   {
     assert_is_checked();
     if (!has_error_)
+    {
       storage()->~storage_type();
+    }
     else
+    {
       error_storage()->~error_type();
+    }
   }
 
   /// Return false if there is an error.
   explicit operator bool()
   {
-    // I'm making Expected<T> a bit more permissive by making it as checked
+    // I'm making Expected<T> a bit more permissive by marking it as checked
     // on a simple bool cast.
     //
     // Original code:
@@ -652,9 +691,13 @@ private:
     other.unchecked_ = false;
 
     if (!has_error_)
+    {
       new (storage()) storage_type(std::move(*other.storage()));
+    }
     else
+    {
       new (error_storage()) error_type(std::move(*other.error_storage()));
+    }
   }
 
   template <class OtherT>
@@ -663,7 +706,9 @@ private:
     assert_is_checked();
 
     if (compare_this_if_same_type(*this, other))
+    {
       return;
+    }
 
     this->~Expected();
     new (this) Expected(std::move(other));
@@ -719,7 +764,7 @@ private:
     unchecked_ = true;
   }
 
-  [[noreturn]]
+#if (defined(ENABLE_FORCED_ERROR_CHECKING) && (ENABLE_FORCED_ERROR_CHECKING))
   // #FIXME: make this compiler check more robust to support the noinline 
   // attribute.
 #if (_MSC_VER)
@@ -729,6 +774,14 @@ private:
 #endif
   void fatal_unchecked_expected() const
   {
+    if (has_error_)
+    {
+      if (!(*error_storage())->is_fatal())
+      {
+        return;
+      }
+    }
+
 #if !defined(NDEBUG)
     std::cerr << "Expected<T> must be checked before access or destruction.\n";
     if (has_error_)
@@ -737,17 +790,27 @@ private:
       (*error_storage())->log(std::cerr);
     }
     else
+    {
       std::cerr << "Expected<T> value was in success state. (Note: Expected<T> "
-                "values in success mode must still be checked prior to being "
-                "destroyed).\n";
+        "values in success mode must still be checked prior to being "
+        "destroyed).\n";
+    }
 #endif
     abort();
   }
+#else
+  void fatal_unchecked_expected() const
+  {
+    // Do nothing.
+  }
+#endif
 
   void assert_is_checked()
   {
     if (unchecked_)
+    {
       fatal_unchecked_expected();
+    }
   }
 
   union
@@ -778,8 +841,11 @@ inline void cant_fail(Error err, const char* msg = nullptr)
   if (err)
   {
     if (!msg)
+    {
       msg = "Failure value returned from cant_fail wrapped call";
-#ifndef NDEBUG
+    }
+
+#if !defined(NDEBUG)
     std::string Str;
     std::ostringstream os(Str);
     os << msg << "\n" << err;
@@ -806,12 +872,17 @@ template <typename T>
 T cant_fail(Expected<T> ValOrErr, const char* msg = nullptr)
 {
   if (ValOrErr)
+  {
     return std::move(*ValOrErr);
+  }
   else
   {
     if (!msg)
+    {
       msg = "Failure value returned from cant_fail wrapped call";
-#ifndef NDEBUG
+    }
+
+#if !defined(NDEBUG)
     std::string str;
     std::ostringstream os(str);
     auto e = ValOrErr.take_error();
@@ -839,12 +910,17 @@ template <typename T>
 T& cant_fail(Expected<T&> valOrErr, const char* msg = nullptr)
 {
   if (valOrErr)
+  {
     return *valOrErr;
+  }
   else
   {
     if (!msg)
+    {
       msg = "Failure value returned from cant_fail wrapped call";
-#ifndef NDEBUG
+    }
+
+#if !defined(NDEBUG)
     std::ostringstream os{};
     auto e = valOrErr.take_error();
     os << msg << "\n" << e;
@@ -993,8 +1069,11 @@ Error handle_error_impl(std::unique_ptr<ErrorInfoBase> payload,
   HandlerT&& handler, HandlerTs&&... handlers)
 {
   if (ErrorHandlerTraits<HandlerT>::applies_to(*payload))
+  {
     return ErrorHandlerTraits<HandlerT>::apply(
       std::forward<HandlerT>(handler), std::move(payload));
+  }
+
   return handle_error_impl(
     std::move(payload), std::forward<HandlerTs>(handlers)...);
 }
@@ -1009,7 +1088,9 @@ template <typename... HandlerTs>
 Error handle_errors(Error e, HandlerTs&&... hs)
 {
   if (!e)
+  {
     return Error::success();
+  }
 
   std::unique_ptr<ErrorInfoBase> payload = e.take_payload();
 
@@ -1018,8 +1099,11 @@ Error handle_errors(Error e, HandlerTs&&... hs)
     ErrorList& errList = static_cast<ErrorList&>(*payload);
     Error r;
     for (auto& p : errList.payloads_)
+    {
       r = ErrorList::join(std::move(r),
         handle_error_impl(std::move(p), std::forward<HandlerTs>(hs)...));
+    }
+
     return r;
   }
 
@@ -1153,9 +1237,25 @@ template <typename T>
 std::optional<T> expected_to_optional(Expected<T>&& e)
 {
   if (e)
+  {
     return std::move(*e);
+  }
+
   consume_error(e.take_error());
   return {};
+}
+
+/// Convert an Expected to an Optional without doing anything. This method
+/// should be used only where an error can be considered a reasonable and
+/// expected return value.
+///
+/// Uses of this method are potentially indicative of problems: perhaps the
+/// error should be propagated further, or the error-producer should just
+/// return an Optional in the first place.
+template <typename T>
+std::optional<T> unwrap(Expected<T>&& e)
+{
+  return expected_to_optional(std::move(e));
 }
 
 /// Helper for converting an Error to a bool.
@@ -1237,7 +1337,9 @@ public:
   ~ExpectedAsOutParameter()
   {
     if (val_or_err_)
+    {
       val_or_err_->set_unchecked();
+    }
   }
 
 private:
