@@ -1,9 +1,9 @@
 ################################################################################
 # Library configuration
 
-set(NETLIB_INC_DIR ${CMAKE_SOURCE_DIR}/include CACHE PATH "" FORCE)
-set(NETLIB_LIB_DIR ${CMAKE_SOURCE_DIR}/lib CACHE PATH "" FORCE)
-set(unitTestDir ${CMAKE_SOURCE_DIR}/unittests)
+set(NETLIB_INC_DIR ${PROJECT_SOURCE_DIR}/include CACHE PATH "" FORCE)
+set(NETLIB_LIB_DIR ${PROJECT_SOURCE_DIR}/lib CACHE PATH "" FORCE)
+set(unitTestDir ${PROJECT_SOURCE_DIR}/unittests)
 
 # source files
 set(srcFiles 
