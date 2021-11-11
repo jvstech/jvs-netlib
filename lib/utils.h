@@ -7,8 +7,8 @@
 #if !defined(JVS_NETLIB_UTILS_H_)
 #define JVS_NETLIB_UTILS_H_
 
+#include <cstring>
 #include <type_traits>
-#include <string>
 #include <tuple>
 
 namespace jvs

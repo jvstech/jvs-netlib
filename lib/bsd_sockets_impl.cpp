@@ -1,5 +1,7 @@
 #include "bsd_sockets_impl.h"
 
+#include <cstring>
+
 #include <sys/ioctl.h>
 #include "native_sockets.h"
 
