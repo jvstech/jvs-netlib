@@ -178,8 +178,7 @@ static constexpr IpAddress::Family get_address_family(
   return IpAddress::Family::Unspecified;
 }
 
-static constexpr socklen_t get_address_length(
-  IpAddress::Family addressFamily) noexcept
+static constexpr socklen_t get_address_length(IpAddress::Family addressFamily) noexcept
 {
   if (addressFamily == IpAddress::Family::IPv4)
   {
@@ -194,13 +193,12 @@ static constexpr socklen_t get_address_length(
   jvs_unreachable("Unsupported address family for length.");
 }
 
-static constexpr socklen_t get_address_length(const IpAddress& addr) noexcept
+static socklen_t get_address_length(const IpAddress& addr) noexcept
 {
   return get_address_length(addr.family());
 }
 
-static constexpr socklen_t get_address_length(
-  const jvs::net::IpEndPoint& ep) noexcept
+static socklen_t get_address_length(const jvs::net::IpEndPoint& ep) noexcept
 {
   return get_address_length(ep.address().family());
 }
