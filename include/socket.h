@@ -1,6 +1,6 @@
 //!
 //! @file socket.h
-//! 
+//!
 
 #if !defined(JVS_NETLIB_SOCKET_H_)
 #define JVS_NETLIB_SOCKET_H_
@@ -23,9 +23,9 @@ namespace jvs::net
 
 //!
 //! @class Socket
-//! 
+//!
 //! Provides an error-checked wrapper around BSD and Winsock interfaces.
-//! 
+//!
 class Socket final
 {
 public:
@@ -54,8 +54,7 @@ public:
   Expected<std::size_t> available() noexcept;
 
   Expected<IpEndPoint> bind(IpEndPoint localEndPoint) noexcept;
-  Expected<IpEndPoint> bind(IpAddress localAddress, NetworkU16 localPort) 
-    noexcept;
+  Expected<IpEndPoint> bind(IpAddress localAddress, NetworkU16 localPort) noexcept;
   Expected<IpEndPoint> bind(IpAddress localAddress) noexcept;
   Expected<IpEndPoint> bind(NetworkU16 localPort) noexcept;
   Expected<IpEndPoint> bind() noexcept;
@@ -63,27 +62,23 @@ public:
   int close() noexcept;
 
   Expected<IpEndPoint> connect(IpEndPoint remoteEndPoint) noexcept;
-  Expected<IpEndPoint> connect(IpAddress remoteAddress, NetworkU16 remotePort)
-    noexcept;
+  Expected<IpEndPoint> connect(IpAddress remoteAddress, NetworkU16 remotePort) noexcept;
 
   Expected<IpEndPoint> listen() noexcept;
   Expected<IpEndPoint> listen(int backlog) noexcept;
 
-  Expected<std::size_t> recv(void* buffer, std::size_t length, int flags)
-    noexcept;
+  Expected<std::size_t> recv(void* buffer, std::size_t length, int flags) noexcept;
   Expected<std::size_t> recv(void* buffer, std::size_t length) noexcept;
-  Expected<std::pair<std::size_t, IpEndPoint>> recvfrom(void* buffer,
-    std::size_t length, int flags) noexcept;
   Expected<std::pair<std::size_t, IpEndPoint>> recvfrom(
-    void* buffer, std::size_t length) noexcept;
+    void* buffer, std::size_t length, int flags) noexcept;
+  Expected<std::pair<std::size_t, IpEndPoint>> recvfrom(void* buffer, std::size_t length) noexcept;
 
-  Expected<std::size_t> send(
-    const void* buffer, std::size_t length, int flags) noexcept;
+  Expected<std::size_t> send(const void* buffer, std::size_t length, int flags) noexcept;
   Expected<std::size_t> send(const void* buffer, std::size_t length) noexcept;
-  Expected<std::size_t> sendto(const void* buffer, std::size_t length,
-    int flags, const IpEndPoint& remoteEp) noexcept;
-  Expected<std::size_t> sendto(const void* buffer, std::size_t length,
-    const IpEndPoint& remoteEp) noexcept;
+  Expected<std::size_t> sendto(
+    const void* buffer, std::size_t length, int flags, const IpEndPoint& remoteEp) noexcept;
+  Expected<std::size_t> sendto(
+    const void* buffer, std::size_t length, const IpEndPoint& remoteEp) noexcept;
 
 private:
   class SocketImpl;
@@ -92,7 +87,6 @@ private:
   Socket(SocketImpl* impl);
 };
 
-} // namespace jvs::net
+}  // namespace jvs::net
 
-
-#endif // !JVS_NETLIB_SOCKET_H_
+#endif  // !JVS_NETLIB_SOCKET_H_
