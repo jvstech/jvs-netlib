@@ -3,9 +3,9 @@
 
 #include "native_sockets.h"
 
-#include "ip_address.h"
-#include "network_integers.h"
-#include "socket.h"
+#include <jvs-netlib/ip_address.h>
+#include <jvs-netlib/network_integers.h>
+#include <jvs-netlib/socket.h>
 
 #include "socket_types.h"
 #include "utils.h"
@@ -13,12 +13,12 @@
 namespace jvs::net
 {
 
-//!
-//! @struct SocketInfo
-//!
-//! Configuration-like class for storing and caching address and transport
-//! information about a socket.
-//!
+///
+/// @struct SocketInfo
+///
+/// Configuration-like class for storing and caching address and transport
+/// information about a socket.
+///
 class SocketInfo final
 {
 public:

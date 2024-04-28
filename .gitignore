@@ -1,4 +1,7 @@
 # VS common files and directories
-.vs/
-out/
+.vs
+.vscode
+build
 CMakeSettings.json
+CMakeUserPresets.json
+out

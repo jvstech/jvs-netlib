@@ -1,8 +1,8 @@
-//!
-//! @file echo_client.cpp
-//! 
-//! Example usage of the Socket class to act as an echo protocol client.
-//! 
+///
+/// @file echo_client.cpp
+/// 
+/// Example usage of the Socket class to act as an echo protocol client.
+/// 
 
 #include <array>
 #include <cstdint>
@@ -14,20 +14,25 @@
 #include <string_view>
 #include <utility>
 
-#include "error.h"
-#include "socket.h"
-#include "transport_end_point.h"
+#include <jvs-netlib/error.h>
+#include <jvs-netlib/socket.h>
+#include <jvs-netlib/transport_end_point.h>
 
 using namespace jvs;
 using namespace jvs::net;
 
-static auto reportError = [](const jvs::ErrorInfoBase& e)
+namespace
+{
+
+void reportError(const jvs::ErrorInfoBase& e)
 {
   std::cout.flush();
   e.log(std::cerr);
   std::cerr << '\n';
   std::exit(1);
-};
+}
+
+}  // namespace
 
 // Socket stream-insertion operator
 Socket& operator<<(Socket& s, const std::string& data) noexcept
@@ -54,7 +59,7 @@ Socket& operator<<(Socket& s, const std::string& data) noexcept
 }
 
 // Socket stream-extraction operator
-Socket& operator>>(Socket& s, std::string& data) noexcept
+Socket& operator>>(Socket& s, std::string& data)
 {
   char startBuf = 0;
   auto recvResult = s.recv(&startBuf, 0);

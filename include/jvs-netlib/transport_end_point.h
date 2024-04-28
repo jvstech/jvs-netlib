@@ -1,7 +1,7 @@
-//!
-//! @file transport_endpoint.h
-//! 
-//! Contains the declarations for jvs::net::TransportEndPoint.
+///
+/// @file transport_endpoint.h
+/// 
+/// Contains the declarations for jvs::net::TransportEndPoint.
 
 #if !defined(JVS_NETLIB_TRANSPORT_ENDPOINT_H_)
 #define JVS_NETLIB_TRANSPORT_ENDPOINT_H_
@@ -19,12 +19,12 @@
 namespace jvs::net
 {
 
-//!
-//! @class TransportEndPoint
-//! 
-//! Named tuple representing one end of a bound socket containing an IP end 
-//! point and a transport protocol.
-//! 
+///
+/// @class TransportEndPoint
+/// 
+/// Named tuple representing one end of a bound socket containing an IP end 
+/// point and a transport protocol.
+/// 
 class TransportEndPoint final
 {
 public:

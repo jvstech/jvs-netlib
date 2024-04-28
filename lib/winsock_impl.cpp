@@ -5,7 +5,7 @@
 
 #include "native_sockets.h"
 
-#include "socket.h"
+#include <jvs-netlib/socket.h>
 
 #include "socket_impl.h"
 #include "utils.h"

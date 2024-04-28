@@ -1,8 +1,8 @@
-//!
-//! @file ip_end_point.h
-//! 
-//! Contains the declarations for jvs::net::IpEndPoint.
-//! 
+///
+/// @file ip_end_point.h
+/// 
+/// Contains the declarations for jvs::net::IpEndPoint.
+/// 
 
 #if !defined(JVS_NETLIB_IP_END_POINT_H_)
 #define JVS_NETLIB_IP_END_POINT_H_
@@ -18,11 +18,11 @@
 namespace jvs::net
 {
 
-//!
-//! @class IpEndPoint
-//! 
-//! Named tuple representing bound IP addresses and ports.
-//! 
+///
+/// @class IpEndPoint
+/// 
+/// Named tuple representing bound IP addresses and ports.
+/// 
 class IpEndPoint final
 {
 public:

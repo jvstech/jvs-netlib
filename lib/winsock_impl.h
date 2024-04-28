@@ -1,9 +1,9 @@
-//!
-//! @file winsock_impl.h
-//! 
-//! Contains the declarations required for the Winsock-specific implementation 
-//! of Socket::SocketImpl.
-//! 
+///
+/// @file winsock_impl.h
+/// 
+/// Contains the declarations required for the Winsock-specific implementation 
+/// of Socket::SocketImpl.
+/// 
 
 #if !defined(JVS_NETLIB_WINSOCK_IMPL_H_)
 #define JVS_NETLIB_WINSOCK_IMPL_H_
@@ -12,8 +12,8 @@
 
 #include "native_sockets.h"
 
-#include "ip_end_point.h"
-#include "socket.h"
+#include <jvs-netlib/ip_end_point.h>
+#include <jvs-netlib/socket.h>
 
 #include "socket_info.h"
 

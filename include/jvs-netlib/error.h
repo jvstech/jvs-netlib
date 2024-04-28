@@ -1,17 +1,17 @@
-//!
-//! @file error.h
-//!
-//! This file is used primarily to implement a clone of LLVM's llvm::Expected
-//! template.
-//!
-//! This is a clone of LLVM's llvm/Support/Error.h with modifications to remove
-//! unneeded code, match the JVS code style, and not much else. As such, the 
-//! LLVM license header is shown here:
-//!
+///
+/// @file error.h
+///
+/// This file is used primarily to implement a clone of LLVM's llvm::Expected
+/// template.
+///
+/// This is a clone of LLVM's llvm/Support/Error.h with modifications to remove
+/// unneeded code, match the JVS code style, and not much else. As such, the 
+/// LLVM license header is shown here:
+///
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//!
+///
 
 #if !defined(JVS_NETLIB_ERROR_H_)
 #define JVS_NETLIB_ERROR_H_
@@ -29,7 +29,6 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-//#include <new>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -485,7 +484,7 @@ inline Error join_errors(Error E1, Error E2)
   return ErrorList::join(std::move(E1), std::move(E2));
 }
 
-//! Replacement for llvm::AlignedCharArrayUnion
+/// Replacement for llvm::AlignedCharArrayUnion
 template <typename T, typename... Ts>
 struct AlignedCharArrayUnion
 {

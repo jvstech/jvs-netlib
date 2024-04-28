@@ -1,6 +1,6 @@
-//!
-//! @file ip_address.h
-//! 
+///
+/// @file ip_address.h
+/// 
 
 #if !defined(JVS_NETLIB_IP_ADDRESS_H_)
 #define JVS_NETLIB_IP_ADDRESS_H_
@@ -22,11 +22,11 @@ namespace jvs::net
 inline constexpr unsigned int Ipv4AddressSize = 4;
 inline constexpr unsigned int Ipv6AddressSize = 16;
 
-//!
-//! @class IpAddress
-//! 
-//! Implementation of an address family-agnostic (IPv4 or IPv6) IP address.
-//! 
+///
+/// @class IpAddress
+/// 
+/// Implementation of an address family-agnostic (IPv4 or IPv6) IP address.
+/// 
 class IpAddress final
 {
 public:

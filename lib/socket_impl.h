@@ -1,19 +1,19 @@
-//!
-//! @file socket_impl.h
-//! 
-//! Contains private declarations of functions used in multiple translation
-//! units for both the BSD and Winsock APIs.
-//! 
+///
+/// @file socket_impl.h
+/// 
+/// Contains private declarations of functions used in multiple translation
+/// units for both the BSD and Winsock APIs.
+/// 
 
 #if !defined(JVS_NETLIB_SOCKET_IMPL_H_)
 #define JVS_NETLIB_SOCKET_IMPL_H_
 
 #include <string>
 
-#include "error.h"
-#include "ip_address.h"
-#include "ip_end_point.h"
-#include "socket.h"
+#include <jvs-netlib/error.h>
+#include <jvs-netlib/ip_address.h>
+#include <jvs-netlib/ip_end_point.h>
+#include <jvs-netlib/socket.h>
 
 #include "socket_info.h"
 

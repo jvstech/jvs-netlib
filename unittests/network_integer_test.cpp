@@ -2,9 +2,9 @@
 #include <cstdint>
 #include <type_traits>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
-#include "network_integers.h"
+#include <jvs-netlib/network_integers.h>
 
 TEST(NetworkIntegerTest, SameAddition)
 {

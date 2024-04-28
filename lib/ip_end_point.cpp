@@ -1,4 +1,4 @@
-#include "ip_end_point.h"
+#include <jvs-netlib/ip_end_point.h>
 
 #include <cstddef>
 #include <cstdint>

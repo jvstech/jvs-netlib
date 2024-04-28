@@ -1,8 +1,8 @@
-//!
-//! @file utils.h
-//! 
-//! Internal utility functions
-//! 
+///
+/// @file utils.h
+/// 
+/// Internal utility functions
+/// 
 
 #if !defined(JVS_NETLIB_UTILS_H_)
 #define JVS_NETLIB_UTILS_H_

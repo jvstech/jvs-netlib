@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
-#include "ip_end_point.h"
+#include <jvs-netlib/ip_end_point.h>
 
 TEST(IpEndPointTest, ParseGoodIpv4EndPoint)
 {

@@ -1,18 +1,18 @@
-//!
-//! @file ip_address.cpp
-//!
-//! This is mostly a translation of the .NET Core IPAddress class from C# to 
-//! C++. Most comments have been kept the same (other than grammar fixes) and
-//! new comments have been added. The referenced source files can be found here:
-//!
-//! Repo: https://github.com/dotnet/runtime.git
-//!   * src/libraries/System.Net.Primitives/src/System/Net/IPAddress.cs
-//!   * src/libraries/System.Net.Primitives/src/System/Net/IPAddressParser.cs
-//!   * src/libraries/Common/src/System/Net/IPv4AddressHelper.Common.cs
-//!   * src/libraries/Common/src/System/Net/IPv6AddressHelper.Common.cs
-//! 
+///
+/// @file ip_address.cpp
+///
+/// This is mostly a translation of the .NET Core IPAddress class from C# to 
+/// C++. Most comments have been kept the same (other than grammar fixes) and
+/// new comments have been added. The referenced source files can be found here:
+///
+/// Repo: https://github.com/dotnet/runtime.git
+///   * src/libraries/System.Net.Primitives/src/System/Net/IPAddress.cs
+///   * src/libraries/System.Net.Primitives/src/System/Net/IPAddressParser.cs
+///   * src/libraries/Common/src/System/Net/IPv4AddressHelper.Common.cs
+///   * src/libraries/Common/src/System/Net/IPv6AddressHelper.Common.cs
+/// 
 
-#include "ip_address.h"
+#include <jvs-netlib/ip_address.h>
 
 #include <algorithm>
 #include <cassert>
@@ -23,8 +23,8 @@
 #include <string>
 #include <utility>
 
-#include "endianness.h"
-#include "network_integers.h"
+#include <jvs-netlib/endianness.h>
+#include <jvs-netlib/network_integers.h>
 
 using jvs::net::alias_cast;
 

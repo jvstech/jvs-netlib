@@ -1,6 +1,6 @@
-//!
-//! @file socket.h
-//!
+///
+/// @file socket.h
+///
 
 #if !defined(JVS_NETLIB_SOCKET_H_)
 #define JVS_NETLIB_SOCKET_H_
@@ -21,11 +21,11 @@
 namespace jvs::net
 {
 
-//!
-//! @class Socket
-//!
-//! Provides an error-checked wrapper around BSD and Winsock interfaces.
-//!
+///
+/// @class Socket
+///
+/// Provides an error-checked wrapper around BSD and Winsock interfaces.
+///
 class Socket final
 {
 public:

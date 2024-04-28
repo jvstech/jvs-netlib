@@ -1,4 +1,4 @@
-#include "transport_end_point.h"
+#include <jvs-netlib/transport_end_point.h>
 
 #include <algorithm>
 #include <cctype>

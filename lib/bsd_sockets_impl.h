@@ -1,17 +1,17 @@
-//!
-//! @file bsd_sockets_impl.h
-//! 
-//! Contains the declarations required for the BSD socket API wrapper
-//! implementation of Socket::SocketImpl.
-//! 
+///
+/// @file bsd_sockets_impl.h
+/// 
+/// Contains the declarations required for the BSD socket API wrapper
+/// implementation of Socket::SocketImpl.
+/// 
 
 #if !defined(JVS_NETLIB_BSD_SOCKETS_IMPL_H_)
 #define JVS_NETLIB_BSD_SOCKETS_IMPL_H_
 
 #include <optional>
 
-#include "ip_end_point.h"
-#include "socket.h"
+#include <jvs-netlib/ip_end_point.h>
+#include <jvs-netlib/socket.h>
 
 #include "socket_info.h"
 

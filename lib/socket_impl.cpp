@@ -1,17 +1,18 @@
-//!
-//! @file socket_impl.cpp
-//! 
-//! Contains private implementations of functions used in multiple translation
-//! units for both the BSD and Winsock APIs. 
-//! 
+///
+/// @file socket_impl.cpp
+/// 
+/// Contains private implementations of functions used in multiple translation
+/// units for both the BSD and Winsock APIs. 
+/// 
 
 #include "socket_impl.h"
 
-#include "native_sockets.h"
+#include <jvs-netlib/native_sockets.h>
 
-#include "socket_errors.h"
+#include <jvs-netlib/socket_errors.h>
 
-#include "socket_context.h"
+#include <jvs-netlib/socket_context.h>
+
 #include "socket_types.h"
 #include "utils.h"
 

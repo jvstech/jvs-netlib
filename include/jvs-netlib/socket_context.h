@@ -1,8 +1,8 @@
-//!
-//! @file socket_context.h
-//! 
-//! Contains the SocketContext class declaration.
-//! 
+///
+/// @file socket_context.h
+/// 
+/// Contains the SocketContext class declaration.
+/// 
 
 #if !defined(JVS_NETLIB_SOCKET_CONTEXT_H_)
 #define JVS_NETLIB_SOCKET_CONTEXT_H_
@@ -14,11 +14,11 @@
 namespace jvs::net
 {
 
-//!
-//! @class SocketContext
-//! 
-//! Wrapper around the native system's socket handle/file descriptor type.
-//! 
+///
+/// @class SocketContext
+/// 
+/// Wrapper around the native system's socket handle/file descriptor type.
+/// 
 class SocketContext final
 {
 public:

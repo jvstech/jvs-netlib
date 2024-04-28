@@ -29,13 +29,13 @@
 #include <unistd.h>
 #endif
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
-#include "ip_address.h"
-#include "ip_end_point.h"
-#include "network_integers.h"
-#include "socket.h"
-#include "transport_end_point.h"
+#include <jvs-netlib/ip_address.h>
+#include <jvs-netlib/ip_end_point.h>
+#include <jvs-netlib/network_integers.h>
+#include <jvs-netlib/socket.h>
+#include <jvs-netlib/transport_end_point.h>
 
 namespace
 {

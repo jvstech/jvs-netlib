@@ -1,8 +1,8 @@
 #include <cstdint>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
-#include "ip_address.h"
+#include <jvs-netlib/ip_address.h>
 
 TEST(IpAddressTest, ParseIPv4)
 {

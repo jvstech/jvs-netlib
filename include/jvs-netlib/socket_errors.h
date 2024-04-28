@@ -1,9 +1,9 @@
-//!
-//! @file socket_errors.h
-//! 
-//! Contains declarations for socket-specific errors and platform-independent
-//! error constants.
-//! 
+///
+/// @file socket_errors.h
+/// 
+/// Contains declarations for socket-specific errors and platform-independent
+/// error constants.
+/// 
 
 #if !defined(JVS_NETLIB_SOCKET_ERRORS_H_)
 #define JVS_NETLIB_SOCKET_ERRORS_H_

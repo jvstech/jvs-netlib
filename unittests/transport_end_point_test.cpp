@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
-#include "transport_end_point.h"
+#include <jvs-netlib/transport_end_point.h>
 
 TEST(TransportEndPointTest, ParseTcpTransportEndPoint)
 {

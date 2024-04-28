@@ -3,8 +3,8 @@
 
 #include "native_sockets.h"
 
-#include "socket.h"
-#include "socket_context.h"
+#include <jvs-netlib/socket.h>
+#include <jvs-netlib/socket_context.h>
 
 #include "utils.h"
 

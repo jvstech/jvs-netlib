@@ -1,9 +1,9 @@
-//!
-//! @file endianness.h
-//! 
-//! Provides utility functions for determining native system byte ordering as
-//! well as reversing the byte order of integral values.
-//! 
+///
+/// @file endianness.h
+/// 
+/// Provides utility functions for determining native system byte ordering as
+/// well as reversing the byte order of integral values.
+/// 
 
 #if !defined(JVS_ENDIANNESS_H_)
 #define JVS_ENDIANNESS_H_

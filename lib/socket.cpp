@@ -1,11 +1,18 @@
-//!
-//! @file socket.cpp
-//! 
-//! Contains the implementations of socket wrapper functions which are
-//! common between both the BSD and Winsock APIs.
-//! 
+///
+/// @file socket.cpp
+///
+/// Contains the implementations of socket wrapper functions which are
+/// common between both the BSD and Winsock APIs.
+///
 
-#include "socket.h"
+#include <jvs-netlib/convert_cast.h>
+#include <jvs-netlib/error.h>
+#include <jvs-netlib/ip_address.h>
+#include <jvs-netlib/ip_end_point.h>
+#include <jvs-netlib/network_integers.h>
+#include <jvs-netlib/socket.h>
+#include <jvs-netlib/socket_context.h>
+#include <jvs-netlib/socket_errors.h>
 
 #include <array>
 #include <cstdint>
@@ -13,15 +20,6 @@
 #include <type_traits>
 
 #include "native_sockets.h"
-
-#include "convert_cast.h"
-#include "error.h"
-#include "ip_address.h"
-#include "ip_end_point.h"
-#include "network_integers.h"
-#include "socket_context.h"
-#include "socket_errors.h"
-
 #include "socket_impl.h"
 #include "socket_info.h"
 #include "socket_types.h"
@@ -45,15 +43,13 @@ namespace jvs
 template <>
 struct ConvertCast<sockaddr, jvs::net::IpEndPoint>
 {
-  Expected<jvs::net::IpEndPoint> operator()(
-    const sockaddr& addr) const noexcept;
+  Expected<jvs::net::IpEndPoint> operator()(const sockaddr& addr) const noexcept;
 };
 
 template <>
 struct ConvertCast<sockaddr_storage, jvs::net::IpEndPoint>
 {
-  Expected<jvs::net::IpEndPoint> operator()(
-    const sockaddr_storage& addr) const noexcept;
+  Expected<jvs::net::IpEndPoint> operator()(const sockaddr_storage& addr) const noexcept;
 };
 
 template <>
@@ -62,43 +58,39 @@ struct ConvertCast<IpEndPoint, sockaddr>
   sockaddr_storage operator()(const IpEndPoint& ep) const noexcept;
 };
 
-
-} // namespace jvs
+}  // namespace jvs
 
 namespace
 {
 
 using GetNameFunc = decltype(::getsockname)*;
 
-static IpAddress get_ip_address(const addrinfo& addrInfo) noexcept
+IpAddress get_ip_address(const addrinfo& addrInfo) noexcept
 {
   if (addrInfo.ai_family == AF_INET)
   {
-    return IpAddress(*alias_cast<std::uint32_t*>(
-      &(reinterpret_cast<sockaddr_in*>(addrInfo.ai_addr)->sin_addr)));
+    return IpAddress(
+      *alias_cast<std::uint32_t*>(&(reinterpret_cast<sockaddr_in*>(addrInfo.ai_addr)->sin_addr)));
   }
   else if (addrInfo.ai_family == AF_INET6)
   {
-    return IpAddress(
-      &(reinterpret_cast<sockaddr_in6*>(addrInfo.ai_addr)->sin6_addr),
-      Family::IPv6);
+    return IpAddress(&(reinterpret_cast<sockaddr_in6*>(addrInfo.ai_addr)->sin6_addr), Family::IPv6);
   }
   else
   {
     // Unknown address type
-    return IpAddress{};
+    return IpAddress {};
   }
 }
 
-static Expected<IpEndPoint> get_endpoint(
-  SocketContext ctx, GetNameFunc nameFunc)
+Expected<IpEndPoint> get_endpoint(SocketContext ctx, GetNameFunc nameFunc)
 {
   if (!nameFunc)
   {
-    return IpEndPoint{};
+    return IpEndPoint {};
   }
 
-  sockaddr_storage addrInfo{};
+  sockaddr_storage addrInfo {};
   socklen_t addrLen = static_cast<socklen_t>(sizeof(addrInfo));
   int result = nameFunc(ctx, reinterpret_cast<sockaddr*>(&addrInfo), &addrLen);
   if (is_error_result(result))
@@ -115,19 +107,19 @@ static Expected<IpEndPoint> get_endpoint(
   return endPoint.take_error();
 }
 
-static Expected<IpEndPoint> get_local_endpoint(SocketContext ctx) noexcept
+Expected<IpEndPoint> get_local_endpoint(SocketContext ctx) noexcept
 {
   static_assert(std::is_same_v<GetNameFunc, decltype(::getsockname)*>);
   return get_endpoint(ctx, ::getsockname);
 }
 
-static Expected<IpEndPoint> get_remote_endpoint(SocketContext ctx) noexcept
+Expected<IpEndPoint> get_remote_endpoint(SocketContext ctx) noexcept
 {
   static_assert(std::is_same_v<GetNameFunc, decltype(::getpeername)*>);
   return get_endpoint(ctx, ::getpeername);
 }
 
-} // namespace
+}  // namespace
 
 // ConvertCast specialization implementations
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,18 +130,15 @@ Expected<IpEndPoint> ConvertCast<sockaddr, IpEndPoint>::operator()(
   if (addr.sa_family == PF_INET)
   {
     auto& ipv4Addr = *reinterpret_cast<const sockaddr_in*>(&addr);
-    return IpEndPoint(
-      IpAddress(
-        NetworkU32::from_network_order(ipv4Addr.sin_addr.s_addr).value()),
+    return IpEndPoint(IpAddress(NetworkU32::from_network_order(ipv4Addr.sin_addr.s_addr).value()),
       NetworkU16::from_network_order(ipv4Addr.sin_port));
   }
   else if (addr.sa_family == PF_INET6)
   {
     auto& ipv6Addr = *reinterpret_cast<const sockaddr_in6*>(&addr);
-    std::array<std::uint8_t, Ipv6AddressSize> ipv6AddrBytes{};
+    std::array<std::uint8_t, Ipv6AddressSize> ipv6AddrBytes {};
     std::memcpy(&ipv6AddrBytes[0], &ipv6Addr.sin6_addr, Ipv6AddressSize);
-    return IpEndPoint(IpAddress(ipv6AddrBytes),
-      NetworkU16::from_network_order(ipv6Addr.sin6_port));
+    return IpEndPoint(IpAddress(ipv6AddrBytes), NetworkU16::from_network_order(ipv6Addr.sin6_port));
   }
 
   // Unknown address family; emit an error.
@@ -162,8 +151,7 @@ Expected<IpEndPoint> ConvertCast<sockaddr_storage, IpEndPoint>::operator()(
   return convert_to<IpEndPoint>(*reinterpret_cast<const sockaddr*>(&addr));
 }
 
-sockaddr_storage ConvertCast<IpEndPoint, sockaddr>::operator()(
-  const IpEndPoint& ep) const noexcept
+sockaddr_storage ConvertCast<IpEndPoint, sockaddr>::operator()(const IpEndPoint& ep) const noexcept
 {
   auto result = create_zero_filled<sockaddr_storage>();
   if (ep.address().is_ipv4())
@@ -171,8 +159,7 @@ sockaddr_storage ConvertCast<IpEndPoint, sockaddr>::operator()(
     auto addr = reinterpret_cast<sockaddr_in*>(&result);
     addr->sin_family = PF_INET;
     addr->sin_port = ep.port().network_value();
-    std::memcpy(
-      &(addr->sin_addr.s_addr), ep.address().address_bytes(), Ipv4AddressSize);
+    std::memcpy(&(addr->sin_addr.s_addr), ep.address().address_bytes(), Ipv4AddressSize);
   }
   else
   {
@@ -180,8 +167,7 @@ sockaddr_storage ConvertCast<IpEndPoint, sockaddr>::operator()(
     addr->sin6_family = PF_INET6;
     addr->sin6_port = ep.port().network_value();
     addr->sin6_scope_id = ep.address().scope_id();
-    std::memcpy(
-      &(addr->sin6_addr), ep.address().address_bytes(), Ipv6AddressSize);
+    std::memcpy(&(addr->sin6_addr), ep.address().address_bytes(), Ipv6AddressSize);
   }
 
   return result;
@@ -191,20 +177,17 @@ sockaddr_storage ConvertCast<IpEndPoint, sockaddr>::operator()(
 ////////////////////////////////////////////////////////////////////////////////
 
 SocketInfo::SocketInfo(const jvs::net::IpAddress& ipAddress)
-  : address_(ipAddress),
-  family_(address_.family())
+  : address_(ipAddress), family_(address_.family())
 {
 }
 
 SocketInfo::SocketInfo(const addrinfo& addrInfo)
-  : address_(get_ip_address(addrInfo)),
-  family_(get_address_family(addrInfo.ai_family))
+  : address_(get_ip_address(addrInfo)), family_(get_address_family(addrInfo.ai_family))
 {
   set_transports(static_cast<SocketTransport>(addrInfo.ai_socktype));
 }
 
-SocketInfo::SocketInfo(SocketContext ctx)
-  : context_(ctx)
+SocketInfo::SocketInfo(SocketContext ctx) : context_(ctx)
 {
   if (auto localEndpoint = get_local_endpoint(ctx))
   {
@@ -248,8 +231,7 @@ NetworkTransport SocketInfo::network_transport() const noexcept
   return network_transport_;
 }
 
-SocketInfo& SocketInfo::set_network_transport(
-  NetworkTransport transport) noexcept
+SocketInfo& SocketInfo::set_network_transport(NetworkTransport transport) noexcept
 {
   network_transport_ = transport;
   return *this;
@@ -328,7 +310,6 @@ void SocketInfo::reset() noexcept
   port_ = 0;
 }
 
-
 // Common Socket::SocketImpl implementations
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -364,8 +345,7 @@ Socket::Socket(IpAddress::Family addressFamily, Socket::Transport transport)
 {
 }
 
-Socket::Socket(Socket::SocketImpl* impl)
-  : impl_(impl)
+Socket::Socket(Socket::SocketImpl* impl) : impl_(impl)
 {
 }
 
@@ -393,10 +373,10 @@ std::intptr_t Socket::descriptor() const noexcept
 
 Expected<Socket> Socket::accept() noexcept
 {
-  sockaddr_storage remoteAddrInfo{};
+  sockaddr_storage remoteAddrInfo {};
   socklen_t addrLen = static_cast<socklen_t>(sizeof(remoteAddrInfo));
-  auto remoteCtx = ::accept(impl_->socket_info_.context(),
-    reinterpret_cast<sockaddr*>(&remoteAddrInfo), &addrLen);
+  auto remoteCtx =
+    ::accept(impl_->socket_info_.context(), reinterpret_cast<sockaddr*>(&remoteAddrInfo), &addrLen);
   if (is_error_result(remoteCtx))
   {
     return create_socket_error(impl_->socket_info_.context());
@@ -411,8 +391,8 @@ Expected<Socket> Socket::accept() noexcept
 Expected<IpEndPoint> Socket::bind(IpEndPoint localEndPoint) noexcept
 {
   auto addrinfo = convert_to<sockaddr>(localEndPoint);
-  int result = ::bind(impl_->socket_info_.context(),
-    reinterpret_cast<sockaddr*>(&addrinfo), get_address_length(localEndPoint));
+  int result = ::bind(impl_->socket_info_.context(), reinterpret_cast<sockaddr*>(&addrinfo),
+    get_address_length(localEndPoint));
   if (is_error_result(result))
   {
     return create_socket_error(impl_->socket_info_.context());
@@ -422,8 +402,7 @@ Expected<IpEndPoint> Socket::bind(IpEndPoint localEndPoint) noexcept
   return local();
 }
 
-Expected<IpEndPoint> Socket::bind(
-  IpAddress localAddress, NetworkU16 localPort) noexcept
+Expected<IpEndPoint> Socket::bind(IpAddress localAddress, NetworkU16 localPort) noexcept
 {
   return bind(IpEndPoint(localAddress, localPort));
 }
@@ -447,8 +426,8 @@ Expected<IpEndPoint> Socket::connect(IpEndPoint remoteEndPoint) noexcept
 {
   auto remoteInfo = convert_to<sockaddr>(remoteEndPoint);
   auto remoteLen = get_address_length(remoteEndPoint.address().family());
-  auto result = ::connect(impl_->socket_info_.context(),
-    reinterpret_cast<sockaddr*>(&remoteInfo), remoteLen);
+  auto result =
+    ::connect(impl_->socket_info_.context(), reinterpret_cast<sockaddr*>(&remoteInfo), remoteLen);
   if (is_error_result(result))
   {
     return create_socket_error(impl_->socket_info_.context());
@@ -463,8 +442,7 @@ Expected<IpEndPoint> Socket::connect(IpEndPoint remoteEndPoint) noexcept
   return remoteEndPoint;
 }
 
-Expected<IpEndPoint> Socket::connect(
-  IpAddress remoteAddress, NetworkU16 remotePort) noexcept
+Expected<IpEndPoint> Socket::connect(IpAddress remoteAddress, NetworkU16 remotePort) noexcept
 {
   return connect(IpEndPoint(remoteAddress, remotePort));
 }
@@ -486,12 +464,10 @@ Expected<IpEndPoint> Socket::listen() noexcept
   return listen(SOMAXCONN);
 }
 
-Expected<std::size_t> Socket::recv(
-  void* buffer, std::size_t length, int flags) noexcept
+Expected<std::size_t> Socket::recv(void* buffer, std::size_t length, int flags) noexcept
 {
-  std::size_t receivedSize =
-    static_cast<std::size_t>(::recv(impl_->socket_info_.context(),
-      reinterpret_cast<char*>(buffer), length, flags));
+  std::size_t receivedSize = static_cast<std::size_t>(
+    ::recv(impl_->socket_info_.context(), reinterpret_cast<char*>(buffer), length, flags));
   if (is_error_result(receivedSize))
   {
     return create_socket_error(impl_->socket_info_.context());
@@ -508,11 +484,11 @@ Expected<std::size_t> Socket::recv(void* buffer, std::size_t length) noexcept
 Expected<std::pair<std::size_t, IpEndPoint>> Socket::recvfrom(
   void* buffer, std::size_t length, int flags) noexcept
 {
-  sockaddr_storage remoteInfo{};
+  sockaddr_storage remoteInfo {};
   socklen_t remoteSize = static_cast<socklen_t>(sizeof(remoteInfo));
   std::size_t receivedSize = static_cast<std::size_t>(
-    ::recvfrom(impl_->socket_info_.context(), reinterpret_cast<char*>(buffer),
-      length, flags, reinterpret_cast<sockaddr*>(&remoteInfo), &remoteSize));
+    ::recvfrom(impl_->socket_info_.context(), reinterpret_cast<char*>(buffer), length, flags,
+      reinterpret_cast<sockaddr*>(&remoteInfo), &remoteSize));
   if (is_error_result(receivedSize))
   {
     return create_socket_error(impl_->socket_info_.context());
@@ -530,7 +506,7 @@ Expected<std::pair<std::size_t, IpEndPoint>> Socket::recvfrom(
     return remoteEndpoint.take_error();
   }
 
-  return std::make_pair(receivedSize, IpEndPoint{});
+  return std::make_pair(receivedSize, IpEndPoint {});
 }
 
 Expected<std::pair<std::size_t, IpEndPoint>> Socket::recvfrom(
@@ -539,12 +515,10 @@ Expected<std::pair<std::size_t, IpEndPoint>> Socket::recvfrom(
   return recvfrom(buffer, length, /*flags*/ 0);
 }
 
-Expected<std::size_t> Socket::send(
-  const void* buffer, std::size_t length, int flags) noexcept
+Expected<std::size_t> Socket::send(const void* buffer, std::size_t length, int flags) noexcept
 {
-  std::size_t sentSize =
-    static_cast<std::size_t>(::send(impl_->socket_info_.context(),
-      reinterpret_cast<const char*>(buffer), length, flags));
+  std::size_t sentSize = static_cast<std::size_t>(
+    ::send(impl_->socket_info_.context(), reinterpret_cast<const char*>(buffer), length, flags));
   if (is_error_result(sentSize))
   {
     return create_socket_error(impl_->socket_info_.context());
@@ -553,20 +527,19 @@ Expected<std::size_t> Socket::send(
   return sentSize;
 }
 
-Expected<std::size_t> Socket::send(
-  const void* buffer, std::size_t length) noexcept
+Expected<std::size_t> Socket::send(const void* buffer, std::size_t length) noexcept
 {
   return send(buffer, length, /*flags*/ 0);
 }
 
-Expected<std::size_t> Socket::sendto(const void* buffer, std::size_t length,
-  int flags, const IpEndPoint& remoteEp) noexcept
+Expected<std::size_t> Socket::sendto(
+  const void* buffer, std::size_t length, int flags, const IpEndPoint& remoteEp) noexcept
 {
   auto remoteInfo = convert_to<sockaddr>(remoteEp);
   auto addrLen = get_address_length(remoteEp);
-  std::size_t sentSize = static_cast<std::size_t>(::sendto(
-    impl_->socket_info_.context(), reinterpret_cast<const char*>(buffer),
-    length, flags, reinterpret_cast<const sockaddr*>(&remoteInfo), addrLen));
+  std::size_t sentSize = static_cast<std::size_t>(
+    ::sendto(impl_->socket_info_.context(), reinterpret_cast<const char*>(buffer), length, flags,
+      reinterpret_cast<const sockaddr*>(&remoteInfo), addrLen));
   if (is_error_result(sentSize))
   {
     return create_socket_error(impl_->socket_info_.context());
