@@ -220,8 +220,9 @@ using NetworkU32 = NetworkInteger<std::uint32_t>;
 using NetworkU64 = NetworkInteger<std::uint64_t>;
 
 template <typename DstT, typename SrcT>
-inline static DstT alias_cast(SrcT* src)
+DstT alias_cast(SrcT* src)
 {
+  // NOLINTNEXTLINE: uintptr_t is guaranteed to be the proper pointer size.
   assert(reinterpret_cast<std::uintptr_t>(src) % alignof(SrcT) == 0);
 
   using DstType = std::remove_pointer_t<DstT>;
@@ -236,9 +237,14 @@ inline static DstT alias_cast(SrcT* src)
     "alignment type.");
   static_assert(sizeof(SrcType) >= sizeof(DstType), 
     "Source type must be same size or larger than the destination type.");
-  static_assert(std::is_const_v<SrcType> ? std::is_const_v<DstType> : true,
-    "Destination type must be const since the source type is const.");
-  return reinterpret_cast<DstT>(src);
+  if constexpr (std::is_const_v<SrcType>)
+  {
+    static_assert(std::is_const_v<DstType>,
+      "Destination type must be const since the source type is const.");
+    return static_cast<DstT>(static_cast<const void*>(src));
+  }
+  
+  return static_cast<DstT>(static_cast<void*>(src));
 }
 
 } // namespace jvs::net

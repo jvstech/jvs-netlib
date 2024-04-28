@@ -35,7 +35,7 @@ void reportError(const jvs::ErrorInfoBase& e)
 }  // namespace
 
 // Socket stream-insertion operator
-Socket& operator<<(Socket& s, const std::string& data) noexcept
+Socket& operator<<(Socket& s, const std::string& data)
 {
   auto bytesSent = s.send(data.data(), data.length());
   if (!bytesSent)

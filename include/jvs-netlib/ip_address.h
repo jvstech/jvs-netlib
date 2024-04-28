@@ -11,6 +11,7 @@
 #include <cstring>
 #include <initializer_list>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -60,6 +61,7 @@ public:
 #endif
 
   // !!! UNSAFE !!!
+  // #TODO: Convert to use `std::span`.
   template <typename T>
   IpAddress(const T* bytes, Family family)
     : family_(family)

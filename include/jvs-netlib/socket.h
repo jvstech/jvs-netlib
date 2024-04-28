@@ -87,6 +87,14 @@ private:
   Socket(SocketImpl* impl);
 };
 
+Expected<std::optional<std::string>> read(Socket& s);
+Error write(Socket& s, std::string_view data);
+
+/// Socket stream-insertion operator
+//Socket& operator<<(Socket& s, const std::string& data);
+/// Socket stream-extraction operator
+//Socket& operator>>(Socket& s, std::string& data);
+
 }  // namespace jvs::net
 
 #endif  // !JVS_NETLIB_SOCKET_H_

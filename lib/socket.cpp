@@ -29,6 +29,7 @@
 #include "winsock_impl.h"
 #else
 #include "bsd_sockets_impl.h"
+#include <jvs-netlib/socket.h>
 #endif
 
 using namespace jvs;
@@ -70,17 +71,16 @@ IpAddress get_ip_address(const addrinfo& addrInfo) noexcept
   if (addrInfo.ai_family == AF_INET)
   {
     return IpAddress(
-      *alias_cast<std::uint32_t*>(&(reinterpret_cast<sockaddr_in*>(addrInfo.ai_addr)->sin_addr)));
+      *alias_cast<std::uint32_t*>(&(jvs::pointer_cast<sockaddr_in>(addrInfo.ai_addr)->sin_addr)));
   }
-  else if (addrInfo.ai_family == AF_INET6)
+  
+  if (addrInfo.ai_family == AF_INET6)
   {
-    return IpAddress(&(reinterpret_cast<sockaddr_in6*>(addrInfo.ai_addr)->sin6_addr), Family::IPv6);
+    return {&(jvs::pointer_cast<sockaddr_in6*>(addrInfo.ai_addr)->sin6_addr), Family::IPv6};
   }
-  else
-  {
-    // Unknown address type
-    return IpAddress {};
-  }
+  
+  // Unknown address type
+  return {};
 }
 
 Expected<IpEndPoint> get_endpoint(SocketContext ctx, GetNameFunc nameFunc)
@@ -518,7 +518,7 @@ Expected<std::pair<std::size_t, IpEndPoint>> Socket::recvfrom(
 Expected<std::size_t> Socket::send(const void* buffer, std::size_t length, int flags) noexcept
 {
   std::size_t sentSize = static_cast<std::size_t>(
-    ::send(impl_->socket_info_.context(), reinterpret_cast<const char*>(buffer), length, flags));
+    ::send(impl_->socket_info_.context(), static_cast<const char*>(buffer), length, flags));
   if (is_error_result(sentSize))
   {
     return create_socket_error(impl_->socket_info_.context());
@@ -538,8 +538,8 @@ Expected<std::size_t> Socket::sendto(
   auto remoteInfo = convert_to<sockaddr>(remoteEp);
   auto addrLen = get_address_length(remoteEp);
   std::size_t sentSize = static_cast<std::size_t>(
-    ::sendto(impl_->socket_info_.context(), reinterpret_cast<const char*>(buffer), length, flags,
-      reinterpret_cast<const sockaddr*>(&remoteInfo), addrLen));
+    ::sendto(impl_->socket_info_.context(), static_cast<const char*>(buffer), length, flags,
+      pointer_cast<const sockaddr*>(&remoteInfo), addrLen));
   if (is_error_result(sentSize))
   {
     return create_socket_error(impl_->socket_info_.context());
@@ -552,4 +552,58 @@ Expected<std::size_t> Socket::sendto(
   const void* buffer, std::size_t length, const IpEndPoint& remoteEp) noexcept
 {
   return sendto(buffer, length, /*flags*/ 0, remoteEp);
+}
+
+jvs::Expected<std::optional<std::string>> jvs::net::read(Socket& s)
+{
+  char startBuf = 0;
+  auto recvResult = s.recv(&startBuf, 0);
+  if (auto e = recvResult.take_error())
+  {
+    return std::move(e);
+  }
+
+  auto bytesToRead = s.available();
+  if (auto e = bytesToRead.take_error())
+  {
+    return std::move(e);
+  }
+
+  std::optional<std::string> buffer(std::in_place, *bytesToRead, static_cast<char>(0));
+  auto bytesRead = s.recv(buffer->data(), buffer->size());
+  if (auto e = bytesRead.take_error())
+  {
+    return std::move(e);    
+  }
+
+  if (!*bytesRead)
+  {
+    // Connection was closed.
+    return std::nullopt;
+  }
+
+  return buffer;
+}
+
+jvs::Error jvs::net::write(Socket& s, std::string_view data)
+{
+  auto bytesSent = s.send(data.data(), data.length());
+  if (auto e = bytesSent.take_error())
+  {
+    return e;
+  }
+
+  std::size_t totalSent = *bytesSent;
+  while (totalSent < data.length())
+  {
+    bytesSent = s.send(data.data() + totalSent, data.length() - totalSent);
+    if (auto e = bytesSent.take_error())
+    {
+      return e;
+    }
+
+    totalSent += *bytesSent;
+  }
+
+  return Error::success();
 }
